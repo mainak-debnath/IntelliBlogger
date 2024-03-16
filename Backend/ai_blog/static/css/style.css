@@ -1,0 +1,161 @@
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@-webkit-keyframes rotate {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+.load {
+    width: 100px;
+    height: 100px;
+    margin: 110px auto 0;
+    border: solid 10px #fff;
+    /* Change border color to white */
+    border-radius: 50%;
+    border-right-color: transparent;
+    border-bottom-color: transparent;
+    -webkit-transition: all 0.5s ease-in;
+    -webkit-animation-name: rotate;
+    -webkit-animation-duration: 1.0s;
+    -webkit-animation-iteration-count: infinite;
+    -webkit-animation-timing-function: linear;
+
+    transition: all 0.5s ease-in;
+    animation-name: rotate;
+    animation-duration: 1.0s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+}
+
+/* Change background and text colors for dark mode */
+body {
+    background-color: #1559bf;
+    /* GitHub Dark background color */
+    color: #c9d1d9;
+    /* GitHub Light Gray text color */
+}
+
+.bg-gray-600 {
+    background-color: #0d1117;
+    /* GitHub Dark background color */
+}
+
+.text-gray-700 {
+    color: #c9d1d9;
+    /* GitHub Light Gray text color */
+}
+
+.text-white {
+    color: #ffffff;
+    /* White */
+}
+
+.bg-white {
+    background-color: #161b22;
+    /* GitHub Darker background color */
+}
+
+.text-black {
+    color: #c9d1d9;
+    /* GitHub Light Gray text color */
+}
+
+.hover\:underline:hover {
+    text-decoration: underline;
+}
+
+.border-blue-400 {
+    border-color: #4f8cc9;
+    /* GitHub Blue border color */
+}
+
+.bg-green-600 {
+    background-color: #2ea44f;
+    /* GitHub Green background color */
+}
+
+.hover\:bg-green-700:hover {
+    background-color: #247a3d;
+    /* GitHub Dark Green background color */
+}
+
+.bg-gray-100 {
+    background-color: rgb(47, 46, 54);
+}
+
+#return-to-top {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgb(0, 0, 0);
+    background: rgba(0, 0, 0, 0.7);
+    width: 50px;
+    height: 50px;
+    display: block;
+    text-decoration: none;
+    -webkit-border-radius: 35px;
+    -moz-border-radius: 35px;
+    border-radius: 35px;
+    display: none;
+    -webkit-transition: all 0.3s linear;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+#return-to-top i {
+    color: #fff;
+    margin: 0;
+    position: relative;
+    left: 16px;
+    top: 13px;
+    font-size: 19px;
+    -webkit-transition: all 0.3s ease;
+    -moz-transition: all 0.3s ease;
+    -ms-transition: all 0.3s ease;
+    -o-transition: all 0.3s ease;
+    transition: all 0.3s ease;
+}
+
+#return-to-top:hover {
+    background: rgba(0, 0, 0, 0.9);
+}
+#return-to-top:hover i {
+    color: #fff;
+    top: 5px;
+}
+
+#back-btn {
+    position: fixed;
+    top: 20%;
+    left: 20px; /* Adjust as needed to position the arrow */
+    transform: translateY(-50%);
+    z-index: 1000; /* Ensure it's above other content */
+    transition: left 0.3s ease;
+}
+
+#back-btn:hover {
+    left: 15px; /* Adjust to move slightly when hovered */
+}
+
+#back-btn i {
+    font-size: 24px; /* Adjust icon size as needed */
+    background-color: rgba(0, 0, 0, 0.5); /* Add a semi-transparent background */
+    padding: 8px; /* Add padding to create a cover around the arrow */
+    border-radius: 50%; /* Make it circular */
+    color: white; /* Icon color */
+}
