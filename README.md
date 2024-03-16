@@ -1,2 +1,2 @@
-# AI-Blog-App
+# IntelliBlogger
  
