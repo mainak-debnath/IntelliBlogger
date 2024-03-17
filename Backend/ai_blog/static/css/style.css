@@ -93,7 +93,8 @@ body {
 }
 
 .bg-gray-100 {
-    background-color: rgb(47, 46, 54);
+    background-color: #272d36;
+    box-shadow: rgba(19, 19, 20, 0.477) 0px 30px 60px -12px inset, rgba(8, 8, 9, 0.482) 0px 18px 36px -18px inset;
 }
 
 #return-to-top {
@@ -158,4 +159,21 @@ body {
     padding: 8px; /* Add padding to create a cover around the arrow */
     border-radius: 50%; /* Make it circular */
     color: white; /* Icon color */
+}
+
+.btn-signup, .btn-login{
+    padding: 8px 16px; 
+    background-color: #397e3b; 
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none; /* Remove underline */
+    transition: background-color 0.3s;
+    margin-right: 20px;
+    margin-top: 60px;
+}
+
+.btn-signup:hover, .btn-login:hover{
+    background-color: #45a049; /* Darker green on hover */
 }
