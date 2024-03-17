@@ -20,6 +20,9 @@ load_dotenv()
 
 # Create your views here.
 
+def home(request):
+    return render(request, 'home.html')
+
 @login_required
 def index(request):
     return render(request, 'index.html')
@@ -119,14 +122,14 @@ def user_login(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('/')
+            return redirect('/index')
         else:
             error_message = "Invalid username or password"
             return render(request, 'login.html', {'error_message': error_message})
         
     return render(request, 'login.html')
 
-def user_signup(request):  # sourcery skip: do-not-use-bare-except
+def user_signup(request):
     if request.method == 'POST':
         password = request.POST['password']
         repeatPassword = request.POST['repeatPassword']
@@ -138,7 +141,7 @@ def user_signup(request):  # sourcery skip: do-not-use-bare-except
                 user = User.objects.create_user(username, email, password)
                 user.save()
                 login(request, user)
-                return redirect('/')
+                return redirect('/index')
             except:
                 error_message = 'Error creating account'
                 return render(request, 'signup.html', {'error_message':error_message})
