@@ -46,7 +46,7 @@ def generate_blog(request):
         return JsonResponse({'error': " Failed to get transcript"}, status=500)
 
 
-    # use openai to generate the blog
+    # use gemini to generate the blog
     blog_content = generate_blog_from_transcription(transcription)
     if not blog_content:
         return JsonResponse({'error': " Failed to generate blog article"}, status=500)
@@ -154,4 +154,18 @@ def user_logout(request):
     logout(request)
     return redirect('/')
 
-
+def delete_blog(request, blog_id):
+    if request.method == 'POST':
+        try:
+            blog_post = BlogPost.objects.get(pk=blog_id)
+            new_blog_title = os.path.splitext(blog_post.youtube_title)[0]
+            mp3_file = os.path.join(settings.MEDIA_ROOT, f"{new_blog_title}.mp3")
+            print(mp3_file)
+            if os.path.exists(mp3_file):
+                os.remove(mp3_file)
+            # Delete blog post from database
+            blog_post.delete()
+            return redirect('blog-list')
+        except BlogPost.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Blog post does not exist'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
