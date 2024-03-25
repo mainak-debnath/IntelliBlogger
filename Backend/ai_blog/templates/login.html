@@ -10,6 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <script type="text/JavaScript" src="{% static 'js/alert.js' %}"></script>
 </head>
 
 <body class="bg-gray-100 fint sans antialised">
@@ -19,7 +20,8 @@
             <a href="index" class="text-3xl font-bold">IntelliBlogger</a>
         </div>
         <div>
-            <a href="signup" class="btn-signup">Signup</a>
+            <a href="signup"
+                class="menu-item text-white hover:bg-green-100 hover:text-white hover:border hover:border-transparent hover:shadow-md mx-4 px-2 py-1 rounded login-link">Signup</a>
         </div>
     </nav>
 
@@ -30,13 +32,22 @@
             <form class="space-y-4" action="" method="POST">
                 {% csrf_token %}
                 {% if error_message %}
-                <div align="center" style="color: red;">
-                    <h2>
-                        {{ error_message }}
-                    </h2>
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert"
+                    id="error-alert">
+                    <span class="block sm:inline">{{ error_message }}</span>
+                    <span class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="dismissAlert()">
+                        <svg class="fill-current h-6 w-6 text-red-500 cursor-pointer" role="button"
+                            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <title>Close</title>
+                            <path
+                                d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z" />
+                        </svg>
+                    </span>
                 </div>
                 {% endif %}
-                <h2 class="text-xl font-semibold">Login</h2>
+                <div class="text-center">
+                    <h2 class="text-2xl font-semibold">Login</h2>
+                </div>
                 <div>
                     <label for="username" class="block mb-1 font-medium">Username</label>
                     <input type="text" id="username" name="username" placeholder="Enter your username..."
@@ -53,11 +64,11 @@
                     class="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700">Login</button>
             </form>
             <div class="text-center mt-4">
-                <p>Need an account? <a href="signup" class="text-green-600 font-semibold hover:underline">Sign up</a></p>
+                <p>Need an account? <a href="signup" class="text-green-600 font-semibold hover:underline">Sign up</a>
+                </p>
             </div>
         </div>
     </div>
-    {% include 'templates/footer.html' %}
 </body>
 
 </html>
