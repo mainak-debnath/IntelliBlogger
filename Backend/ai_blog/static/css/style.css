@@ -239,3 +239,19 @@ nav .menu-item:hover {
     color: #fff;
     font-size: 20px;
 }
+
+.clear-search {
+    position: absolute;
+    right: 80px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #867f7f;
+    font-size: 400px;
+    display: none;
+  }
+  
+  .clear-search:hover {
+    color: #423e3e;
+  }
+  
