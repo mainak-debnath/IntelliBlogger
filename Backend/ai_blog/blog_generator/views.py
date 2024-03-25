@@ -14,6 +14,7 @@ from .models import BlogPost
 import markdown
 import nltk
 from dotenv import load_dotenv
+from pytube.exceptions import RegexMatchError
 
 
 load_dotenv()
@@ -30,12 +31,19 @@ def index(request):
 @csrf_exempt
 def generate_blog(request):
     if request.method != 'POST':
-        return JsonResponse({'error': 'Invalid request method'}, status=405)
+        error_message = "Invalid request method"
+        return render(request, 'index.html', {'error_message': error_message})
     try:
         data = json.loads(request.body)
         yt_link = data['link'] 
+    except RegexMatchError:
+        error_message = "Invalid YouTube link. Please provide a valid link."
+        print(error_message)
+        return render(request, 'index.html', {'error_message': error_message})
     except (KeyError, json.JSONDecodeError):
-        return JsonResponse({'error': 'Invalid data sent'}, status=400)
+        error_message = "Invalid data sent"
+        return render(request, 'index.html', {'error_message': error_message})
+    
 
     # get yt title
     title = yt_title(yt_link)
@@ -43,13 +51,14 @@ def generate_blog(request):
     # get transcript
     transcription = get_transcription(yt_link)
     if not transcription:
-        return JsonResponse({'error': " Failed to get transcript"}, status=500)
+        error_message = "Failed to get transcript"
+        return render(request, 'index.html', {'error_message': error_message})
 
-
-    # use openai to generate the blog
+    # use gemini to generate the blog
     blog_content = generate_blog_from_transcription(transcription)
     if not blog_content:
-        return JsonResponse({'error': " Failed to generate blog article"}, status=500)
+        error_message = "Failed to generate blog article"
+        return render(request, 'index.html', {'error_message': error_message})
 
 
     # save blog to db
@@ -95,7 +104,11 @@ def generate_blog_from_transcription(transcription):
     return markdown.markdown(response.text)
 
 def blog_list(request):
-    blog_articles = BlogPost.objects.filter(user=request.user)
+    query = request.GET.get('q')
+    if query:
+        blog_articles = BlogPost.objects.filter(user=request.user, youtube_title__icontains=query)
+    else:
+        blog_articles = BlogPost.objects.filter(user=request.user)
     return render(request, "all-blogs.html", {'blog_articles': blog_articles})
 
 def blog_details(request, pk):
@@ -146,7 +159,7 @@ def user_signup(request):
                 error_message = 'Error creating account'
                 return render(request, 'signup.html', {'error_message':error_message})
         else:
-            error_message = 'Password do not match'
+            error_message = 'Passwords do not match'
             return render(request, 'signup.html', {'error_message':error_message})
 
     return render(request, 'signup.html')
@@ -154,4 +167,18 @@ def user_logout(request):
     logout(request)
     return redirect('/')
 
-
+def delete_blog(request, blog_id):
+    if request.method == 'POST':
+        try:
+            blog_post = BlogPost.objects.get(pk=blog_id)
+            new_blog_title = os.path.splitext(blog_post.youtube_title)[0]
+            mp3_file = os.path.join(settings.MEDIA_ROOT, f"{new_blog_title}.mp3")
+            print(mp3_file)
+            if os.path.exists(mp3_file):
+                os.remove(mp3_file)
+            # Delete blog post from database
+            blog_post.delete()
+            return redirect('blog-list')
+        except BlogPost.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Blog post does not exist'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
