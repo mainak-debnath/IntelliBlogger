@@ -12,7 +12,7 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
     <script type="text/JavaScript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/JavaScript" src="{% static 'js/scroll-top.js' %}"></script>
-    
+
 </head>
 
 <body class="bg-gray-100 font-sans antialiased">
@@ -24,8 +24,11 @@
         </div>
         <div class="flex items-center">
             <a href="#" class="text-white hover:text-white mx-4 px-3 py-2 rounded">Hey! {{user.username}}</a>
-            <a href="/blog-list" class="menu-item text-white hover:bg-green-600 hover:text-white hover:border hover:border-transparent hover:shadow-md mx-4 px-3 py-2 rounded">Saved Blog Posts</a>
-            <a href="logout" class="menu-item text-white hover:bg-green-600 hover:text-white hover:border hover:border-transparent hover:shadow-md px-3 py-2 rounded">Logout</a>
+            <a href="/blog-list"
+                class="menu-item text-white hover:bg-green-600 hover:text-white hover:border hover:border-transparent hover:shadow-md mx-4 px-3 py-2 rounded">Saved
+                Blog Posts</a>
+            <a href="logout"
+                class="menu-item text-white hover:bg-green-600 hover:text-white hover:border hover:border-transparent hover:shadow-md px-3 py-2 rounded">Logout</a>
         </div>
     </nav>
 
@@ -36,19 +39,18 @@
     <div class="container mx-auto mt-10 px-4 sm:px-0">
         <div class="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow-md">
             <section>
-                <h2 class="text-xl mb-4 font-semibold">Blog Post Details</h2>
+                <div class="text-center">
+                    <h2 class="text-xl mb-4 font-semibold">Blog Post Details</h2>
+                </div>
                 <div class="border border-gray-300 p-4 rounded-lg">
                     <h3 class="text-lg font-semibold">{{blog_article_detail.youtube_title}}</h3>
-                    <!-- Display truncated content -->
                     <p class="text-gray-700">{{ truncated_content|safe }}</p>
-                    <!-- Toggle button to show remaining content -->
-                    {% if remaining_content %}
-                    <button class="text-blue-600 hover:underline" id="read-more-btn">Read more...</button>
-                    <!-- Hidden div containing remaining content -->
-                    <div id="remaining-content" style="display: none;">
+                    <div id="read-more-container">
+                        <button class="text-blue-600 hover:underline" id="read-more-btn">Read more...</button>
+                      </div>
+                      <div id="remaining-content" style="display: none;">
                         {{ remaining_content|safe }}
-                    </div>
-                    {% endif %}
+                      </div>
                     <hr class="my-4 border-gray-300">
                     <h4 class="text-lg font-semibold">Youtube Title</h4>
                     <p class="text-gray-700">{{blog_article_detail.youtube_title}}</p>
