@@ -15,6 +15,7 @@ import markdown
 import nltk
 from dotenv import load_dotenv
 from pytube.exceptions import RegexMatchError
+from django.db import transaction
 
 
 load_dotenv()
@@ -29,6 +30,7 @@ def index(request):
     return render(request, 'index.html')
 
 @csrf_exempt
+@transaction.atomic
 def generate_blog(request):
     if request.method != 'POST':
         error_message = "Invalid request method"
