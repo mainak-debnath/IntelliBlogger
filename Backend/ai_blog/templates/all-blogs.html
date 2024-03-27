@@ -13,6 +13,7 @@
     <script type="text/JavaScript" src="{% static 'js/utils.js' %}"></script>
     <script type="text/JavaScript" src="{% static 'js/scroll-top.js' %}"></script>
     <script type="text/JavaScript" src="{% static 'js/search.js' %}"></script>
+    <!-- <script type="text/JavaScript" src="{% static 'js/delete-post.js' %}"></script> -->
 </head>
 
 <body class="bg-gray-100 font-sans antialiased">
@@ -61,26 +62,49 @@
             <!-- Blog posts section -->
             <section>
                 <div class="text-center">
-                <h2 class="text-xl mb-4 font-semibold">All Blog Posts</h2>
+                    <h2 class="text-xl mb-4 font-semibold">All Blog Posts</h2>
                 </div>
                 <div class="space-y-4">
-
                     {% for article in blog_articles reversed %}
-                    <form action="{% url 'delete_blog' article.id %}" method="post">
+                    <form action="{% url 'delete_blog' article.id %}" method="post" id="delete-form-{{ article.id }}">
                         {% csrf_token %}
-                        <a href="blog-details/{{article.id}}">
-                            <div class="border border-gray-300 p-4 rounded-lg">
+                        <div class="border border-gray-300 p-4 rounded-lg">
+                            <a href="blog-details/{{article.id}}">
                                 <h3 class="text-lg font-semibold">{{article.youtube_title}}</h3>
                                 <p>{{article.generated_content|safe|truncatechars:100}}</p>
-                                <button type="submit" class="delete-button">
-                                    <i class="fa fa-trash-o"></i>
+                            </a>
+                            <button type="button" class="delete-button" data-article-id="{{ article.id }}">
+                                <i class="fa fa-trash-o"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <br>
+                    <!-- Delete Modal -->
+                    <div id="deleteModal{{ article.id }}"
+                        class="delete-modal hidden fixed inset-0 z-50 flex justify-center items-center">
+                        <div class="delete-modal-overlay fixed inset-0 bg-black opacity-50"></div>
+                        <div class="delete-modal-content bg-white rounded-lg overflow-hidden max-w-md relative">
+                            <div class="absolute top-0 right-0 m-3">
+                                <button type="button" class="text-gray-500 hover:text-gray-700"
+                                    onclick="closeDeleteModal('{{ article.id }}')">
+                                    <i class="fa fa-times"></i>
                                 </button>
                             </div>
-                    </form>
-                    </a>
-                    <br>
-                    {% endfor %}
+                            <div class="p-6">
+                                <h2 class="text-lg font-bold mb-4">Are you sure?</h2>
+                                <p class="text-sm text-gray-500 mb-4">Do you really want to delete this post? This
+                                    action cannot be undone.</p>
+                                <div class="flex justify-end">
+                                    <button type="button" class="modal-delete-button"
+                                        onclick="deletePost('{{ article.id }}')">Delete</button>
+                                    <button type="button" class="modal-cancel-button"
+                                        onclick="closeDeleteModal('{{ article.id }}')">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    {% endfor %}
                     <!-- Repeat -->
                 </div>
             </section>
@@ -94,5 +118,30 @@
     </a>
 
     {% include 'templates/footer.html' %}
+    <script>
+        // Function to show delete modal
+        function openDeleteModal(articleId) {
+            document.getElementById(`deleteModal${articleId}`).classList.remove('hidden');
+        }
+
+        // Function to hide delete modal
+        function closeDeleteModal(articleId) {
+            document.getElementById(`deleteModal${articleId}`).classList.add('hidden');
+        }
+
+        // Function to delete post
+        function deletePost(articleId) {
+            document.getElementById(`delete-form-${articleId}`).submit();
+        }
+
+        // Event listeners for delete buttons
+        const deleteButtons = document.querySelectorAll('.delete-button');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const articleId = this.dataset.articleId;
+                openDeleteModal(articleId);
+            });
+        });
+    </script>
 
 </html>
