@@ -111,7 +111,10 @@ def blog_list(request):
         blog_articles = BlogPost.objects.filter(user=request.user, youtube_title__icontains=query)
     else:
         blog_articles = BlogPost.objects.filter(user=request.user)
-    return render(request, "all-blogs.html", {'blog_articles': blog_articles})
+    no_posts_found = False
+    if not blog_articles.exists():
+        no_posts_found = True
+    return render(request, "all-blogs.html", {'blog_articles': blog_articles, 'no_posts_found': no_posts_found})
 
 def blog_details(request, pk):
     blog_article_detail = BlogPost.objects.get(id=pk)

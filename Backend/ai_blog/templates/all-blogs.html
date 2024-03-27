@@ -64,6 +64,10 @@
                     <h2 class="text-xl mb-4 font-semibold">All Blog Posts</h2>
                 </div>
                 <div class="space-y-4">
+                    {% if no_posts_found %}
+                    <hr class="w-full border-b-2 border-gray-400 mb-4">
+                    <p class="text-lg text-center">No posts found.</p>
+                    {% else %}
                     {% for article in blog_articles reversed %}
                     <form action="{% url 'delete_blog' article.id %}" method="post" id="delete-form-{{ article.id }}">
                         {% csrf_token %}
@@ -104,6 +108,7 @@
                     </div>
 
                     {% endfor %}
+                    {% endif %}
                     <!-- Repeat -->
                 </div>
             </section>
