@@ -1,0 +1,407 @@
+<header class="main-header">
+    <div class="container">
+        <a routerLink="/" class="logo">Intelliblogger</a>
+
+        <!-- Desktop Navigation -->
+        <nav class="main-nav">
+            <a href="#how-it-works">How It Works</a>
+            <a href="#features">Features</a>
+            <a href="#pricing">Pricing</a>
+        </nav>
+
+        <div class="header-actions">
+            <!-- Dark Mode Toggle -->
+            <button class="theme-toggle" aria-label="Toggle dark mode" (click)="themeService.toggleTheme()">
+                <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    style="display: none;">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+
+            <a routerLink="/login" class="btn btn-secondary">Log In</a>
+            <a routerLink="/signup" class="btn btn-primary">Sign Up Free</a>
+        </div>
+
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-button" (click)="toggleMobileMenu()" [attr.aria-expanded]="isMobileMenuOpen">
+            <!-- Simple hamburger -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" [class.active]="isMobileMenuOpen">
+        <a href="#features" (click)="closeMobileMenu()">Features</a>
+        <a href="#how-it-works" (click)="closeMobileMenu()">How It Works</a>
+        <a href="#pricing" (click)="closeMobileMenu()">Pricing</a>
+
+        <!-- Mobile Dark Mode Toggle -->
+        <button class="theme-toggle" aria-label="Toggle dark mode" (click)="themeService.toggleTheme()">
+            <svg *ngIf="themeService.currentTheme === 'light'" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg *ngIf="themeService.currentTheme === 'dark'" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+
+        <a routerLink="/login" (click)="closeMobileMenu()">Log In</a>
+        <a routerLink="/signup" class="btn btn-primary" (click)="closeMobileMenu()">Sign Up Free</a>
+    </div>
+</header>
+
+<main>
+    <section class="hero-section">
+        <div class="animated-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+        <div class="container text-center">
+            <h1 class="fade-in" appAnimateOnScroll>
+                Turn <span class="gradient-text">Video</span> into Viral
+                <span class="gradient-text">Blogs</span>, Instantly.
+            </h1>
+
+            <p class="hero-subtitle fade-in-delay-1" appAnimateOnScroll>
+                Our AI transforms your YouTube content into SEO-optimized articles in
+                minutes, freeing you to focus on growth.
+            </p>
+
+            <div class="hero-cta-buttons fade-in-delay-2" appAnimateOnScroll>
+                <a [routerLink]="isAuthenticated ? '/generator' : '/signup'" class="btn btn-primary btn-large">
+                    Get Started for Free
+                </a>
+            </div>
+
+            <p class="hero-note">No credit card required. Get your first blog post for free.</p>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section">
+        <div class="container text-center">
+            <h2 class="section-title fade-in" appAnimateOnScroll>
+                Create Content in 3 Simple Steps
+            </h2>
+            <div class="steps-grid">
+                <div class="step-card slide-up" appAnimateOnScroll>
+                    <div class="step-number">1</div>
+                    <h3>Paste a Link</h3>
+                    <p>
+                        Once you're logged in, grab any YouTube video URL and paste it into
+                        our generator.
+                    </p>
+                </div>
+                <div class="step-card slide-up-delay-1" appAnimateOnScroll>
+                    <div class="step-number">2</div>
+                    <h3>Customize & Refine</h3>
+                    <p>
+                        Our AI creates a draft. You can then edit, change the tone, and add
+                        your own voice.
+                    </p>
+                </div>
+                <div class="step-card slide-up-delay-2" appAnimateOnScroll>
+                    <div class="step-number">3</div>
+                    <h3>Publish & Grow</h3>
+                    <p>
+                        Export your new article to your blog, social media, or anywhere
+                        else.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section bg-light">
+        <div class="container">
+            <div class="text-center">
+                <h2 class="section-title fade-in" appAnimateOnScroll>
+                    More Than a Converter, It's a Content Engine
+                </h2>
+            </div>
+            <div class="features-grid">
+                <!-- Feature 1 -->
+                <div class="feature-card fade-in" appAnimateOnScroll>
+                    <h4>SEO Optimization</h4>
+                    <p>
+                        Automatically generates content with relevant keywords and structure
+                        to help you rank higher on Google.
+                    </p>
+                </div>
+                <!-- Feature 2 -->
+                <div class="feature-card fade-in" appAnimateOnScroll>
+                    <h4>Multiple Languages</h4>
+                    <p>
+                        Repurpose your content for a global audience by translating it into
+                        different languages.
+                    </p>
+                </div>
+                <!-- Feature 3 -->
+                <div class="feature-card fade-in" appAnimateOnScroll>
+                    <h4>Custom Tones</h4>
+                    <p>
+                        Choose from a variety of writing styles—from professional to
+                        casual—to match your brand's voice.
+                    </p>
+                </div>
+                <!-- Feature 4 -->
+                <div class="feature-card fade-in" appAnimateOnScroll>
+                    <h4>Save Hours of Work</h4>
+                    <p>
+                        Stop spending time on manual transcription and writing. Go from
+                        video to blog post in under 5 minutes.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section id="pricing" class="section">
+        <div class="container text-center">
+            <h2 class="section-title fade-in" appAnimateOnScroll>
+                Choose Your Perfect Plan
+            </h2>
+            <p class="section-subtitle fade-in-delay-1" appAnimateOnScroll>
+                Simple, transparent pricing that grows with your content needs.
+            </p>
+
+            <div class="pricing-toggle fade-in-delay-1" appAnimateOnScroll>
+                <span class="pricing-toggle-text">Monthly</span>
+                <label class="pricing-switch">
+                    <input type="checkbox" id="pricing-toggle-input" (change)="togglePricing($event)" />
+                    <span class="pricing-slider"></span>
+                </label>
+                <span class="pricing-toggle-text">Yearly <span class="pricing-save-badge">Save 20%</span></span>
+            </div>
+
+            <div class="pricing-grid">
+                <!-- Free Plan -->
+                <div class="pricing-card slide-up" appAnimateOnScroll>
+                    <div class="pricing-header">
+                        <h3>Free</h3>
+                        <div class="pricing-price">
+                            <span class="price" [class.monthly-price]="!isYearly"
+                                [class.yearly-price]="isYearly">$0</span>
+                            <span class="period" [class.monthly-period]="!isYearly" [class.yearly-period]="isYearly">
+                                {{ isYearly ? "/year" : "/month" }}
+                            </span>
+                        </div>
+                        <p class="pricing-description">
+                            Perfect for trying out the platform
+                        </p>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li>3 Blog Posts Per Month</li>
+                            <li>Basic SEO Optimization</li>
+                            <li>Standard Export Options</li>
+                            <li>Community Support</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-action">
+                        <a routerLink="/signup" class="btn btn-secondary btn-large btn-block">Get Started</a>
+                    </div>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="pricing-card pricing-card-popular slide-up-delay-1" appAnimateOnScroll>
+                    <div class="pricing-popular-tag">Most Popular</div>
+                    <div class="pricing-header">
+                        <h3>Pro</h3>
+                        <div class="pricing-price">
+                            <span class="price" [class.monthly-price]="!isYearly" [class.yearly-price]="isYearly">
+                                {{ isYearly ? "$279" : "$29" }}
+                            </span>
+                            <span class="period" [class.monthly-period]="!isYearly" [class.yearly-period]="isYearly">
+                                {{ isYearly ? "/year" : "/month" }}
+                            </span>
+                        </div>
+                        <p class="pricing-description">
+                            Great for content creators and small businesses
+                        </p>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li>30 Blog Posts Per Month</li>
+                            <li>Advanced SEO Optimization</li>
+                            <li>Custom Brand Voice</li>
+                            <li>Priority Support</li>
+                            <li>Analytics Dashboard</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-action">
+                        <a routerLink="/signup" class="btn btn-primary btn-large btn-block">Get Started</a>
+                    </div>
+                </div>
+
+                <!-- Business Plan -->
+                <div class="pricing-card slide-up-delay-2" appAnimateOnScroll>
+                    <div class="pricing-header">
+                        <h3>Business</h3>
+                        <div class="pricing-price">
+                            <span class="price" [class.monthly-price]="!isYearly" [class.yearly-price]="isYearly">
+                                {{ isYearly ? "$759" : "$79" }}
+                            </span>
+                            <span class="period" [class.monthly-period]="!isYearly" [class.yearly-period]="isYearly">
+                                {{ isYearly ? "/year" : "/month" }}
+                            </span>
+                        </div>
+                        <p class="pricing-description">For teams and growing businesses</p>
+                    </div>
+                    <div class="pricing-features">
+                        <ul>
+                            <li>Unlimited Blog Posts</li>
+                            <li>Premium SEO Features</li>
+                            <li>Multiple User Accounts</li>
+                            <li>Dedicated Account Manager</li>
+                            <li>Advanced Analytics</li>
+                            <li>Custom Integrations</li>
+                        </ul>
+                    </div>
+                    <div class="pricing-action">
+                        <a routerLink="/signup" class="btn btn-secondary btn-large btn-block">Contact Sales</a>
+                    </div>
+                </div>
+            </div>
+
+            <p class="pricing-note fade-in-delay-2" appAnimateOnScroll>
+                Need a custom plan for your enterprise?
+                <a href="#">Contact our sales team</a>.
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container text-center">
+            <h2 class="cta-title fade-in" appAnimateOnScroll>
+                Ready to Supercharge Your Content?
+            </h2>
+            <p class="cta-subtitle fade-in-delay-1" appAnimateOnScroll>
+                Stop letting your video content sit on YouTube. Turn it into a powerful
+                marketing asset today.
+            </p>
+            <div class="fade-in-delay-2" appAnimateOnScroll>
+                <a routerLink="/signup" class="btn btn-primary btn-large">
+                    Start Creating for Free
+                </a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer class="main-footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="footer-logo">Intelliblogger</a>
+                <p class="footer-tagline">
+                    Transform your video content into engaging blog posts with AI.
+                </p>
+                <div class="social-icons">
+                    <a href="#" aria-label="Twitter"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z">
+                            </path>
+                        </svg></a>
+                    <a href="#" aria-label="Facebook"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                        </svg></a>
+                    <a href="#" aria-label="Instagram"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                        </svg></a>
+                    <a href="#" aria-label="LinkedIn"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z">
+                            </path>
+                            <rect x="2" y="9" width="4" height="12"></rect>
+                            <circle cx="4" cy="4" r="2"></circle>
+                        </svg></a>
+                </div>
+            </div>
+
+            <div class="footer-nav">
+                <h3>Product</h3>
+                <nav>
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#pricing">Pricing</a>
+                    <a href="#">FAQ</a>
+                </nav>
+            </div>
+
+            <div class="footer-nav">
+                <h3>Company</h3>
+                <nav>
+                    <a href="#">About Us</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Press</a>
+                </nav>
+            </div>
+
+            <div class="footer-nav">
+                <h3>Legal</h3>
+                <nav>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Cookies</a>
+                    <a href="#">Contact</a>
+                </nav>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2025 Intelliblogger. All rights reserved.</p>
+            <div class="language-select">
+                <span>English (US)</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </div>
+        </div>
+    </div>
+</footer>
