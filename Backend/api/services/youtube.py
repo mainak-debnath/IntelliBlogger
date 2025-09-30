@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import os
 import subprocess
-import sys
+
+# import sys
 import uuid
 from dataclasses import dataclass
 from typing import Optional
@@ -63,31 +64,54 @@ class YouTubeAudioDownloader:
         self.media_root = media_root or settings.MEDIA_ROOT
 
     def download_mp3(self, link: str) -> str:
+        # os.makedirs(self.media_root, exist_ok=True)
+        # filename = f"{uuid.uuid4().hex}"
+        # output_pattern = os.path.join(self.media_root, f"{filename}.%(ext)s")
+        # try:
+        #     # -x extract audio; --audio-format mp3 ensures MP3 output
+        #     # -o <path> to write exactly to output_file
+        #     subprocess.run(
+        #         [
+        #             sys.executable,
+        #             "-m",
+        #             "yt_dlp",
+        #             "-f",
+        #             "bestaudio/best",
+        #             "-x",
+        #             "--audio-format",
+        #             "mp3",
+        #             "--ffmpeg-location",
+        #             "C:/ffmpeg/bin",
+        #             "-o",
+        #             output_pattern,
+        #             YouTubeUrl.normalize(link),
+        #         ],
+        #         check=True,
+        #         stdout=subprocess.PIPE,
+        #         stderr=subprocess.PIPE,
+        #     )
+        #     output_file = os.path.join(self.media_root, f"{filename}.mp3")
         os.makedirs(self.media_root, exist_ok=True)
-        filename = f"{uuid.uuid4().hex}"
-        output_pattern = os.path.join(self.media_root, f"{filename}.%(ext)s")
+        output_file = os.path.join(self.media_root, f"{uuid.uuid4().hex}.mp3")
         try:
             # -x extract audio; --audio-format mp3 ensures MP3 output
             # -o <path> to write exactly to output_file
             subprocess.run(
                 [
-                    sys.executable,
-                    "-m",
-                    "yt_dlp",
+                    "yt-dlp",
                     "-x",
                     "--audio-format",
                     "mp3",
                     "--ffmpeg-location",
                     "C:/ffmpeg/bin",
                     "-o",
-                    output_pattern,
+                    output_file,
                     YouTubeUrl.normalize(link),
                 ],
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
             )
-            output_file = os.path.join(self.media_root, f"{filename}.mp3")
         except subprocess.CalledProcessError as e:
             print(f"yt-dlp error: {e.stderr}")
             raise AudioDownloadError(
