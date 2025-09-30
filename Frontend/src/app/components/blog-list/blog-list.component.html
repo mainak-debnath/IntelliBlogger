@@ -1,3 +1,4 @@
+<!-- Enhanced Blog List Page -->
 <header class="main-header">
     <div class="container">
         <a routerLink="/" class="logo">IntelliBlogger</a>
@@ -8,7 +9,6 @@
         </nav>
 
         <div class="header-actions">
-            <!-- theme toggle -->
             <button (click)="toggleTheme()" class="theme-toggle" aria-label="Toggle dark mode">
                 <svg *ngIf="themeService.theme === 'light'" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -32,7 +32,6 @@
             <button class="btn btn-secondary" (click)="logout()">Logout</button>
         </div>
 
-        <!-- mobile hamburger -->
         <button (click)="mobileMenuOpen = !mobileMenuOpen" class="mobile-menu-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor"
                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -43,7 +42,6 @@
         </button>
     </div>
 
-    <!-- Mobile menu -->
     <div class="mobile-menu" *ngIf="mobileMenuOpen">
         <button (click)="toggleTheme()" class="theme-toggle" aria-label="Toggle dark mode">
             <svg *ngIf="themeService.theme === 'light'" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
@@ -70,52 +68,282 @@
     </div>
 </header>
 
-<!-- Blogs Header & Search -->
-<header class="allblogs-header">
-    <div class="allblogs-container">
-        <h1 class="allblogs-title">All Blogs</h1>
-
-        <div class="allblogs-searchbar">
-            <input type="text" [(ngModel)]="searchTerm" (keyup.enter)="onSearch()" placeholder="Search blogs..."
-                class="allblogs-input" />
-            <button class="allblogs-btn" (click)="onSearch()">Search</button>
-        </div>
-    </div>
-</header>
-
-<!-- Blog list -->
 <main class="allblogs-main">
-    <div class="allblogs-list">
-        <article class="allblogs-card" appAnimateOnScroll *ngFor="let blog of blogs">
-            <h2 class="allblogs-card-title">
-                <a [routerLink]="['/blog', blog.id]">{{ blog.youtube_title }}</a>
-            </h2>
+    <!-- Enhanced Header Section with Stats -->
+    <section class="allblogs-hero">
+        <div class="allblogs-container">
+            <div class="hero-content">
+                <h1 class="allblogs-title">Your Blog Library</h1>
+                <p class="allblogs-subtitle">Manage and organize all your generated content</p>
+            </div>
 
-            <p class="allblogs-card-body" [innerHTML]="blog.generated_content | truncateHtml:25"></p>
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14,2 14,8 20,8"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ blogs?.length || 0 }}</div>
+                        <div class="stat-label">Total Blogs</div>
+                    </div>
+                </div>
 
-            <!-- delete button -->
-            <button type="button" class="delete-icon-btn" (click)="openDeleteModal(blog)" aria-label="Delete blog">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6l-2 14H7L5 6"></path>
-                    <path d="M10 11v6"></path>
-                    <path d="M14 11v6"></path>
-                </svg>
-            </button>
-        </article>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z">
+                            </path>
+                            <polygon points="9.75,15.02 15.5,11.75 9.75,8.48"></polygon>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ blogs?.length || 0 }}</div>
+                        <div class="stat-label">Videos Converted</div>
+                    </div>
+                </div>
 
-        <!-- Delete modal -->
-        <div class="delete-modal-backdrop" *ngIf="blogToDelete" (click)="closeDeleteModal()">
-            <div class="delete-modal-a" (click)="$event.stopPropagation()">
-                <button class="close-btn" (click)="closeDeleteModal()">x</button>
-                <h2>Delete this blog?</h2>
-                <p>Are you sure you want to delete this post?</p>
-                <div class="actions">
-                    <button class="cancel" (click)="closeDeleteModal()">Cancel</button>
-                    <button class="confirm" (click)="deleteBlog()">Delete</button>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12,6 12,12 16,14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="stat-info">
+                        <div class="stat-value">{{ getTotalReadingTime() }}</div>
+                        <div class="stat-label">Min Reading</div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Search and Filter Section -->
+    <section class="search-filter-section">
+        <div class="allblogs-container">
+            <div class="search-filter-wrapper">
+                <!-- Search Bar -->
+                <div class="search-box">
+                    <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                    <input type="text" [(ngModel)]="searchTerm" (input)="onSearch()"
+                        placeholder="Search blogs by title or content..." class="search-input" />
+                    <button *ngIf="searchTerm" class="clear-search" (click)="clearSearch()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Filter and Sort Options -->
+                <div class="filter-controls">
+                    <select [(ngModel)]="sortBy" (change)="onSortChange()" class="filter-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="title">Title A-Z</option>
+                        <option value="title-desc">Title Z-A</option>
+                    </select>
+
+                    <div class="view-toggle">
+                        <button class="view-btn" [class.active]="viewMode === 'grid'" (click)="viewMode = 'grid'"
+                            title="Grid view">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <rect x="3" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="3" width="7" height="7"></rect>
+                                <rect x="14" y="14" width="7" height="7"></rect>
+                                <rect x="3" y="14" width="7" height="7"></rect>
+                            </svg>
+                        </button>
+                        <button class="view-btn" [class.active]="viewMode === 'list'" (click)="viewMode = 'list'"
+                            title="List view">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Filters Display -->
+            <div class="active-filters" *ngIf="searchTerm">
+                <span class="filter-label">Searching for:</span>
+                <span class="filter-tag">
+                    "{{ searchTerm }}"
+                    <button (click)="clearSearch()" class="remove-filter">×</button>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Blog Cards Section -->
+    <section class="blogs-section">
+        <div class="allblogs-container">
+            <!-- Empty State -->
+            <div class="empty-state" *ngIf="!blogs || blogs.length === 0">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14,2 14,8 20,8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10,9 9,9 8,9"></polyline>
+                </svg>
+                <h2>No blogs yet</h2>
+                <p>Start creating your first blog from a YouTube video</p>
+                <a routerLink="/generator" class="btn btn-primary">Generate Your First Blog</a>
+            </div>
+
+            <!-- No Search Results -->
+            <div class="empty-state" *ngIf="blogs && blogs.length === 0 && searchTerm">
+                <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="m21 21-4.35-4.35"></path>
+                </svg>
+                <h2>No results found</h2>
+                <p>Try adjusting your search terms</p>
+                <button class="btn btn-secondary" (click)="clearSearch()">Clear Search</button>
+            </div>
+
+            <!-- Blog Grid/List -->
+            <div class="allblogs-list" [class.list-view]="viewMode === 'list'" [class.grid-view]="viewMode === 'grid'"
+                *ngIf="blogs && blogs.length > 0">
+                <article class="allblogs-card" appAnimateOnScroll *ngFor="let blog of getPaginatedBlogs()">
+                    <div class="card-header">
+                        <div class="blog-meta">
+                            <!-- <span class="blog-date" *ngIf="blog.created_at">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12,6 12,12 16,14"></polyline>
+                                </svg>
+                                {{ blog.created_at | date:'MMM d, yyyy' }}
+                            </span> -->
+                            <span class="blog-source">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path
+                                        d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z">
+                                    </path>
+                                </svg>
+                                YouTube
+                            </span>
+                        </div>
+
+                        <button type="button" class="delete-icon-btn" (click)="openDeleteModal(blog)"
+                            aria-label="Delete blog" title="Delete blog">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6l-2 14H7L5 6"></path>
+                                <path d="M10 11v6"></path>
+                                <path d="M14 11v6"></path>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <h2 class="allblogs-card-title">
+                        <a [routerLink]="['/blog', blog.id]">{{ blog.youtube_title }}</a>
+                    </h2>
+
+                    <p class="allblogs-card-body" [innerHTML]="blog.generated_content | truncateHtml:25"></p>
+
+                    <div class="card-footer">
+                        <div class="card-stats">
+                            <span class="stat-item">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="9" cy="7" r="4"></circle>
+                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                </svg>
+                                {{ getWordCount(blog.generated_content) }} words
+                            </span>
+                            <span class="stat-item">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12,6 12,12 16,14"></polyline>
+                                </svg>
+                                {{ getReadingTime(blog.generated_content) }} min read
+                            </span>
+                        </div>
+
+                        <a [routerLink]="['/blog', blog.id]" class="read-more-btn">
+                            Read More
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12,5 19,12 12,19"></polyline>
+                            </svg>
+                        </a>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Load More / Pagination (if needed) -->
+            <div class="pagination" *ngIf="totalPages > 1">
+                <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="15,18 9,12 15,6"></polyline>
+                    </svg>
+                    Previous
+                </button>
+
+                <div class="page-numbers">
+                    <button *ngFor="let page of getPageNumbers()" class="page-num" [class.active]="page === currentPage"
+                        (click)="goToPage(page)">
+                        {{ page }}
+                    </button>
+                </div>
+
+                <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+                    Next
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="9,18 15,12 9,6"></polyline>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </section>
 </main>
+
+<!-- Delete Modal -->
+<div class="delete-modal-backdrop" *ngIf="blogToDelete" (click)="closeDeleteModal()">
+    <div class="delete-modal-a" (click)="$event.stopPropagation()">
+        <button class="close-btn" (click)="closeDeleteModal()">×</button>
+        <div class="modal-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        </div>
+        <h2>Delete this blog?</h2>
+        <p>This action cannot be undone. The blog will be permanently removed from your library.</p>
+        <div class="actions">
+            <button class="cancel" (click)="closeDeleteModal()">Cancel</button>
+            <button class="confirm" (click)="deleteBlog()">Delete Permanently</button>
+        </div>
+    </div>
+</div>
