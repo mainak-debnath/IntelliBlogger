@@ -145,10 +145,11 @@ class BlogListAPIView(APIView):
         return Response(serializer.data)
 
 
-class BlogDetailAPIView(generics.RetrieveDestroyAPIView):
+class BlogDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
     """
     GET  /blogs/<id>   -> Retrieve a single blog post (only for the owner)
     DELETE /blogs/<id> -> Delete the blog post (only for the owner)
+    PUT    /blogs/<id>/   -> Update the entire blog post
     """
 
     serializer_class = BlogPostSerializer

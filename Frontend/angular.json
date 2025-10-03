@@ -28,7 +28,9 @@
             ],
             "styles": [
               "node_modules/@fortawesome/fontawesome-free/css/all.min.css",
-              "src/styles.css"
+              "src/styles.css",
+              "node_modules/quill/dist/quill.core.css",
+              "node_modules/quill/dist/quill.snow.css"
             ],
             "scripts": []
           },
