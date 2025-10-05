@@ -36,5 +36,8 @@ class BlogPostSerializer(serializers.ModelSerializer):
             "youtube_title",
             "youtube_link",
             "generated_content",
+            "tone",
+            "length",
             "created_at",
         ]
+        read_only_fields = ["id", "tone", "length", "youtube_link", "created_at"]

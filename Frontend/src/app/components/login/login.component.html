@@ -35,10 +35,6 @@
             <h1 class="auth-title">Welcome Back!</h1>
             <p class="auth-subtitle">Log in to continue creating amazing content.</p>
 
-            <!-- Alerts -->
-            <app-alert *ngIf="errorMessage" [message]="errorMessage" type="error"></app-alert>
-            <app-alert *ngIf="successMessage" [message]="successMessage" type="success"></app-alert>
-
             <!-- Reactive form -->
             <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
                 <div class="form-group">

@@ -6,10 +6,12 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { QuillModule } from 'ngx-quill';
 import { Blog } from '../../models/blog';
 import { BlogExportData } from '../../models/blog-export-data';
+import { BlogUpdateRequest } from '../../models/blog-update-request';
 import { NotificationMessage } from '../../models/notification-message';
 import { AuthService } from '../../services/auth.service';
 import { BlogService } from '../../services/blog.service';
 import { ThemeService } from '../../services/theme.service';
+import { ToastService } from '../../services/toast.service';
 import { QuillConfiguration } from './quill-configuration';
 
 @Component({
@@ -35,6 +37,7 @@ export class BlogDetailsComponent implements OnInit {
   authorName: string = '';
   publishDate: string = '';
   tags: string = '';
+  hasUnsavedChanges = false;
 
   // Notification system
   notification: NotificationMessage = {
@@ -52,7 +55,8 @@ export class BlogDetailsComponent implements OnInit {
     private blogService: BlogService,
     public themeService: ThemeService,
     private auth: AuthService,
-    private sanitizer: DomSanitizer // Add DomSanitizer to constructor
+    private sanitizer: DomSanitizer,
+    private toastService: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -67,6 +71,7 @@ export class BlogDetailsComponent implements OnInit {
 
 
   onContentChanged(event: any) {
+    this.hasUnsavedChanges = true;
     this.editableContent = event.html; // Keep HTML content
     //this.autoSave();
   }
@@ -223,31 +228,28 @@ export class BlogDetailsComponent implements OnInit {
     this.showShareDropdown = false;
   }
 
-  // Auto-save functionality
-  private autoSaveTimeout: any;
-  private autoSave() {
-    clearTimeout(this.autoSaveTimeout);
-    this.autoSaveTimeout = setTimeout(() => {
-      this.saveBlogData();
-    }, 2000); // Auto-save after 2 seconds of inactivity
-  }
+  // private autoSaveTimeout: any;
+  // private autoSave() {
+  //   clearTimeout(this.autoSaveTimeout);
+  //   this.autoSaveTimeout = setTimeout(() => {
+  //     this.saveBlogData();
+  //   }, 2000); // Auto-save after 2 seconds of inactivity
+  // }
 
-  private async saveBlogData() {
+  public async saveBlogData() {
     try {
       if (!this.blog?.id) return;
 
-      const updatedBlog: Blog = {
-        id: this.blog.id,
+      const updatedData: BlogUpdateRequest = {
         youtube_title: this.editableTitle,
-        generated_content: this.editableContent,
-        youtube_link: this.blog.youtube_link
+        generated_content: this.editableContent
       };
 
-      // Call your API to update the blog
-      await this.blogService.updateBlog(updatedBlog).toPromise();
-      console.log('Blog auto-saved:', updatedBlog);
+      await this.blogService.updateBlog(this.blog.id, updatedData).toPromise();
+      this.hasUnsavedChanges = false;
+      this.toastService.success('Your changes have been saved successfully.');
     } catch (error) {
-      console.error('Auto-save failed:', error);
+      this.toastService.error('Save Failed', 'Could not save your changes.');
     }
   }
 
@@ -291,24 +293,6 @@ export class BlogDetailsComponent implements OnInit {
   @HostListener('document:keydown', ['$event'])
   handleKeyDown(event: KeyboardEvent) {
     if (!this.isEditMode) return;
-
-    // Ctrl/Cmd + B for bold
-    // if ((event.ctrlKey || event.metaKey) && event.key === 'b') {
-    //   event.preventDefault();
-    //   this.formatText('bold');
-    // }
-
-    // Ctrl/Cmd + I for italic
-    // if ((event.ctrlKey || event.metaKey) && event.key === 'i') {
-    //   event.preventDefault();
-    //   this.formatText('italic');
-    // }
-
-    // Ctrl/Cmd + U for underline
-    // if ((event.ctrlKey || event.metaKey) && event.key === 'u') {
-    //   event.preventDefault();
-    //   this.formatText('underline');
-    // }
 
     // Ctrl/Cmd + S for save
     if ((event.ctrlKey || event.metaKey) && event.key === 's') {

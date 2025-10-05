@@ -130,6 +130,25 @@
                             </svg>
                             Options
                         </button>
+                        <span class="blog-badge blog-tone" [attr.data-tone]="blog?.tone">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                <path d="M2 17l10 5 10-5"></path>
+                                <path d="M2 12l10 5 10-5"></path>
+                            </svg>
+                            {{ blog?.tone | titlecase }}
+                        </span>
+                        <span class="blog-badge blog-length" [attr.data-length]="blog?.length">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="21" y1="10" x2="3" y2="10"></line>
+                                <line x1="21" y1="6" x2="3" y2="6"></line>
+                                <line x1="21" y1="14" x2="3" y2="14"></line>
+                                <line x1="21" y1="18" x2="3" y2="18"></line>
+                            </svg>
+                            {{ blog?.length | titlecase }}
+                        </span>
                     </div>
                 </div>
 
@@ -166,6 +185,17 @@
                         <span class="stat">Words: {{ getWordCount() }}</span>
                         <span class="stat">Characters: {{ getCharCount() }}</span>
                         <span class="stat">Reading time: {{ getReadingTime() }} min</span>
+                    </div>
+                    <div class="editor-actions">
+                        <button class="save-btn" (click)="saveBlogData()" [disabled]="!hasUnsavedChanges">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                <polyline points="7 3 7 8 15 8"></polyline>
+                            </svg>
+                            {{ hasUnsavedChanges ? 'Save Changes' : 'Saved' }}
+                        </button>
                     </div>
                 </div>
 

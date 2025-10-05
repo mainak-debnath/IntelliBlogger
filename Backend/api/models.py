@@ -8,7 +8,12 @@ class BlogPost(models.Model):
     youtube_title = models.CharField(max_length=300)
     youtube_link = models.URLField()
     generated_content = models.TextField()
+    tone = models.CharField(max_length=50, default="professional")
+    length = models.CharField(max_length=20, default="medium")
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        unique_together = ["user", "youtube_link", "tone", "length"]
+
     def __str__(self):
-        return self.youtube_title
+        return f"{self.youtube_title} ({self.tone}, {self.length})"

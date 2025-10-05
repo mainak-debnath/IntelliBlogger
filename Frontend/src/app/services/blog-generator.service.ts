@@ -1,6 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
+import { BlogResponse } from '../models/blog-response';
+import { SaveBlogRequest } from '../models/save-blog-request';
+import { SaveBlogResponse } from '../models/save-blog-response';
 
 @Injectable({
   providedIn: 'root'
@@ -11,10 +14,10 @@ export class BlogGeneratorService {
 
   constructor(private http: HttpClient) { }
 
-  generate(link: string): Observable<{ id: number; content: string; title: string }> {
-    return this.http.post<{ id: number; content: string; title: string }>(
+  generate(link: string, tone: string, length: string): Observable<BlogResponse> {
+    return this.http.post<BlogResponse>(
       `${this.baseUrl}/generate-blog/`,
-      { link },
+      { link, tone, length },
       {
         headers: { Authorization: `Bearer ${localStorage.getItem('access')}` }
       }
@@ -25,6 +28,16 @@ export class BlogGeneratorService {
         }
         return throwError(() => err);
       })
+    );
+  }
+
+  saveBlog(request: SaveBlogRequest): Observable<SaveBlogResponse> {
+    return this.http.post<SaveBlogResponse>(
+      `${this.baseUrl}/save-blog/`,
+      request,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access')}` }
+      }
     );
   }
 
