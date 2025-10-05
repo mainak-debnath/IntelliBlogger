@@ -5,13 +5,13 @@ import { Router, RouterModule } from '@angular/router';
 import { SignupPayload } from '../../models/signup-model';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
+import { ToastService } from '../../services/toast.service';
 import { BackButtonComponent } from '../../shared/back-button/back-button.component';
-import { AlertComponent } from '../alert/alert.component';
 
 @Component({
   selector: 'app-signup',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, AlertComponent, BackButtonComponent, RouterModule],
+  imports: [CommonModule, ReactiveFormsModule, BackButtonComponent, RouterModule],
   templateUrl: './signup.component.html',
   styleUrls: ['./signup.component.css']
 })
@@ -20,14 +20,12 @@ export class SignupComponent {
   passwordVisible = false;
   repeatPasswordVisible = false;
 
-  errorMessage: string | null = null;
-  successMessage: string | null = null;
-
   constructor(
     private fb: FormBuilder,
     public themeService: ThemeService,
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {
     this.signupForm = this.fb.group({
       username: ['', Validators.required],
@@ -54,21 +52,18 @@ export class SignupComponent {
       const payload: SignupPayload = this.signupForm.value;
 
       if (payload.password !== payload.repeat_password) {
-        this.errorMessage = 'Passwords do not match';
-        this.successMessage = null;
+        this.toastService.error('Passwords do not match');
         return;
       }
 
       this.auth.signup(payload).subscribe({
         next: res => {
-          this.successMessage = 'Account created successfully!';
-          this.errorMessage = null;
-          this.router.navigate(['/generator'])
-          //this.signupForm.reset();
+          this.router.navigate(['/generator']);
+          this.toastService.success('Account successfully created!');
         },
         error: err => {
-          this.errorMessage = err.error?.error || 'Signup failed';
-          this.successMessage = null;
+          const errorMsg = err.error?.detail || 'Signup failed. Please try again.';
+          this.toastService.error("Signup failed! Please try again.", errorMsg);
         }
       });
     }

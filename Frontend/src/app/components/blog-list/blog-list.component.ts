@@ -28,7 +28,7 @@ export class BlogListComponent implements OnInit {
   viewMode: 'grid' | 'list' = 'grid';
   sortBy: string = 'newest';
   currentPage: number = 1;
-  itemsPerPage: number = 12;
+  itemsPerPage: number = 3;
   totalPages: number = 1;
 
   constructor(

@@ -4,4 +4,6 @@ export interface Blog {
     generated_content: string;
     youtube_link: string;
     created_at?: string;
+    tone: string;
+    length: string;
 }

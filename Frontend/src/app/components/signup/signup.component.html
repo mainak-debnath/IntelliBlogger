@@ -36,10 +36,6 @@
             <h1 class="auth-title">Create an Account</h1>
             <p class="auth-subtitle">Join us and start your blogging journey.</p>
 
-            <!-- Alerts -->
-            <app-alert *ngIf="errorMessage" [message]="errorMessage" type="error"></app-alert>
-            <app-alert *ngIf="successMessage" [message]="successMessage" type="success"></app-alert>
-
             <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="auth-form">
                 <div class="form-group">
                     <label for="username">Username</label>

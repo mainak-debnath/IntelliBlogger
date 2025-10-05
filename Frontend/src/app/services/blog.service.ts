@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Blog } from '../models/blog';
 import { BlogExportData } from '../models/blog-export-data';
+import { BlogUpdateRequest } from '../models/blog-update-request';
 
 @Injectable({
   providedIn: 'root'
@@ -27,9 +28,8 @@ export class BlogService {
     return this.http.get<Blog>(`${this.apiUrl}/blogs/${id}/`);
   }
 
-  // UPDATE BLOG METHOD (for auto-save functionality)
-  updateBlog(blog: Blog): Observable<Blog> {
-    return this.http.put<Blog>(`${this.apiUrl}/blogs/${blog.id}/`, blog);
+  updateBlog(id: number, data: BlogUpdateRequest): Observable<Blog> {
+    return this.http.patch<Blog>(`${this.apiUrl}/blogs/${id}/`, data);
   }
 
   // COPY TO CLIPBOARD METHOD
@@ -48,9 +48,7 @@ export class BlogService {
 
   // DOWNLOAD METHODS
 
-  /**
-   * Generate and download HTML file
-   */
+  //Generate and download HTML file
   downloadAsHTML(blogData: BlogExportData): void {
     const htmlContent = this.generateHTMLContent(blogData);
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
