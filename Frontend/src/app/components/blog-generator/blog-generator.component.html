@@ -31,48 +31,156 @@
     </div>
 </header>
 
-<main class="flex-grow">
-    <!-- hero section -->
-    <section class="hero-section">
-        <div class="animated-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-        </div>
-        <div class="container text-center">
-            <h1 class="fade-in" appAnimateOnScroll>Welcome, <span class="gradient-text">{{ username
-                    }}</span></h1>
-            <p class="hero-subtitle fade-in-delay-1" appAnimateOnScroll>
-                Paste a YouTube video link below to instantly generate a high-quality blog article.
-            </p>
+<main class="gen-layout">
+    <!-- Hero Section - Only show when no content generated -->
+    <div class="gen-hero" *ngIf="!blogResponse">
+        <h1 class="gen-hero-title">Turn YouTube Videos into Blog Posts</h1>
+        <p class="gen-hero-subtitle">
+            AI-powered content creation that transforms any video into a polished, SEO-friendly article in seconds.
+        </p>
+    </div>
 
-            <div class="form-container">
-                <form [formGroup]="linkForm" (ngSubmit)="generateBlog()">
-                    <div class="input-group">
-                        <input formControlName="link" type="url" placeholder="Paste your YouTube Link here..."
-                            class="url-input" />
-                        <button type="submit" class="btn btn-primary btn-large" [disabled]="loading">Generate</button>
-                    </div>
-                    <div *ngIf="linkForm.get('link')?.invalid && linkForm.get('link')?.touched"
-                        class="text-red-500 text-sm mt-2">
-                        Please enter a valid YouTube URL
-                    </div>
-                </form>
+    <!-- Control Panel - Always visible but compact when content exists -->
+    <div class="gen-control-panel" [class.compact]="blogResponse">
+        <h2 class="gen-control-title" *ngIf="blogResponse">Generate Another Post</h2>
+
+        <form [formGroup]="linkForm" (ngSubmit)="generateBlog()" class="gen-form">
+            <div class="gen-form-group">
+                <label for="youtube-link">YouTube Video URL</label>
+                <input id="youtube-link" formControlName="link" type="url" placeholder="https://youtube.com/watch?v=..."
+                    class="gen-url-input" />
+                <div *ngIf="linkForm.get('link')?.invalid && linkForm.get('link')?.touched" class="gen-error-message">
+                    Please enter a valid YouTube URL
+                </div>
             </div>
 
-            <div *ngIf="loading" class="mt-4 flex justify-center">
-                <div class="loading-spinner">
-                    <div class="spinner"></div>
-                    <div class="loading-text">Generating your blog post…</div>
+            <!-- Advanced Options - Collapsible -->
+            <div class="gen-advanced-options">
+                <button type="button" class="gen-advanced-toggle" [class.expanded]="showAdvanced"
+                    (click)="showAdvanced = !showAdvanced">
+                    <span>{{ showAdvanced ? 'Hide' : 'Show' }} Advanced Options</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
+
+                <div class="gen-advanced-content" [class.show]="showAdvanced">
+                    <div class="gen-options-inner">
+                        <h3 class="gen-options-title">Customize Your Article</h3>
+                        <div class="gen-options-grid">
+                            <div class="gen-form-group">
+                                <label for="tone">Tone of Voice</label>
+                                <select id="tone" formControlName="tone" class="gen-options-select">
+                                    <option value="professional">Professional</option>
+                                    <option value="casual">Casual & Friendly</option>
+                                    <option value="witty">Witty & Humorous</option>
+                                    <option value="technical">Technical & Detailed</option>
+                                </select>
+                            </div>
+                            <div class="gen-form-group">
+                                <label for="length">Article Length</label>
+                                <select id="length" formControlName="length" class="gen-options-select">
+                                    <option value="short">Short (~300 words)</option>
+                                    <option value="medium">Medium (~600 words)</option>
+                                    <option value="long">Long (1000+ words)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-large gen-generate-button" [disabled]="loading">
+                <span *ngIf="!loading">{{ blogResponse ? 'Generate New Article' : 'Generate Article' }}</span>
+                <span *ngIf="loading">
+                    <span class="spinner-small"></span> Generating...
+                </span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Output Section -->
+    <div class="gen-output-section">
+        <!-- How It Works - Placeholder -->
+        <div *ngIf="!loading && !blogResponse" class="gen-placeholder-content">
+            <h2 class="gen-placeholder-title">How It Works</h2>
+            <div class="gen-steps-grid">
+                <div class="gen-step-card">
+                    <div class="gen-step-number">1</div>
+                    <h3>Paste Link</h3>
+                    <p>Provide a link to any YouTube video you want to convert into an article.</p>
+                </div>
+                <div class="gen-step-card">
+                    <div class="gen-step-number">2</div>
+                    <h3>Customize</h3>
+                    <p>Choose your preferred tone and length, or let our AI decide what works best.</p>
+                </div>
+                <div class="gen-step-card">
+                    <div class="gen-step-number">3</div>
+                    <h3>Generate & Save</h3>
+                    <p>Get a polished, unique blog post in seconds. Edit, save, or copy to use anywhere.</p>
                 </div>
             </div>
         </div>
-    </section>
-    <section *ngIf="blogContent" class="generated-section">
-        <div class="generated-container">
-            <h2 class="generated-title">Your Generated Article</h2>
-            <div class="generated-article" [innerHTML]="blogContent"></div>
+
+        <!-- Loading State -->
+        <div *ngIf="loading" class="gen-loading-container">
+            <div class="gen-loading-spinner">
+                <div class="spinner"></div>
+                <div class="gen-loading-text">Analyzing video and generating your blog post...</div>
+                <p class="gen-loading-subtext">This may take up to a minute for longer videos.</p>
+            </div>
         </div>
-    </section>
-    <app-footer></app-footer>
+
+        <!-- Generated Content -->
+        <div *ngIf="!loading && blogResponse" class="gen-output-card">
+            <header class="gen-output-header">
+                <div class="gen-header-content">
+                    <h2 class="gen-output-title">{{ blogResponse.title }}</h2>
+                    <p class="gen-output-meta">Generated Blog Post</p>
+                </div>
+                <div class="gen-output-actions">
+                    <button class="btn btn-secondary" (click)="copyContent()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                        </svg>
+                        Copy
+                    </button>
+                    <button class="btn btn-primary" (click)="saveBlog()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                            <polyline points="7 3 7 8 15 8"></polyline>
+                        </svg>
+                        Save Blog
+                    </button>
+                </div>
+            </header>
+            <div class="gen-output-content" [innerHTML]="getSanitizedContent()"></div>
+        </div>
+    </div>
+    <div class="modal-backdrop" *ngIf="showUpdateConfirmModal" (click)="closeConfirmModal()">
+        <div class="modal-dialog" (click)="$event.stopPropagation()">
+            <div class="confirm-modal-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <h2 class="modal-title">Blog Already Exists</h2>
+            <p class="modal-body">
+                A blog for this video with the same settings is already in your collection. Do you want to overwrite its
+                content with this new version?
+            </p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" (click)="closeConfirmModal()">Cancel</button>
+                <button class="btn btn-primary" (click)="confirmUpdate()">Yes, Update</button>
+            </div>
+        </div>
+    </div>
 </main>

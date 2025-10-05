@@ -35,15 +35,19 @@ class BlogGenerator:
         }
         target_tone = tone_instructions.get(tone, "a professional tone")
         prompt = (
-            "Based on the following transcript from a YouTube video, write a comprehensive "
-            "blog article. Write it based on the transcript, but do not make it sound like "
-            "a YouTube video. Make it read as a polished, structured blog article with an "
-            "engaging intro, clear sections, and a concise conclusion.\n\n"
-            f"Transcript:\n{transcription}\n\nArticle:"
+            "You are an expert blog writer.\n\n"
+            "Based on the following transcript from a YouTube video, generate a polished blog article. "
+            "It should not read like a transcript or a YouTube script, but like a structured article. "
+            "The blog should have:\n"
+            "- An engaging introduction\n"
+            "- Well-structured sections with headers\n"
+            "- A concise conclusion\n\n"
+            f"Please write the article in {target_length}, and {target_tone}\n\n"
+            f"Transcript:\n{transcription}\n\n"
+            "Blog Article:"
         )
-        # response = self.model.generate_content(prompt)
-        # html = markdown.markdown(response.text or "")
-        html = f"<h1>Generated Blog Post</h1><p>This is a sample blog post generated with a <strong>{tone}</strong> tone and targeting a <strong>{length}</strong> length. The AI would process the transcript and generate the full article here.</p>"
+        response = self.model.generate_content(prompt)
+        html = markdown.markdown(response.text or "")
         if not html:
             raise RuntimeError("Failed to generate blog content from transcript.")
         return html
