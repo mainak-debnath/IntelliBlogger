@@ -1724,10 +1724,10 @@ input:checked+.pricing-slider:before {
 /* --- Responsive Design --- */
 @media (min-width: 768px) {
 
-    /* .mobile-menu-button,
+    .mobile-menu-button,
     .mobile-menu {
         display: none !important;
-    } */
+    }
 
     .main-nav {
         display: flex !important;
@@ -5923,4 +5923,10 @@ input:checked+.pricing-slider:before {
 .auth-buttons .btn {
     width: 100%;
     text-align: center;
+}
+
+.nav-isauthenticated {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
 }
