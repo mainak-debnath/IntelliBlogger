@@ -26,6 +26,7 @@ export class BlogGeneratorComponent {
   showAdvanced = false;
   showUpdateConfirmModal = false;
   existingBlogId: number | null = null;
+  isMobileMenuOpen = false;
 
   constructor(
     private fb: FormBuilder,
@@ -43,8 +44,21 @@ export class BlogGeneratorComponent {
     });
   }
 
+  get isAuthenticated(): boolean {
+    return this.auth.isAuthenticated();
+  }
+
+
   toggleTheme() {
     this.themeService.toggleTheme();
+  }
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   logout() {
