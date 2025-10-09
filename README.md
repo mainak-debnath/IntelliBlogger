@@ -1,1 +1,115 @@
-# IntelliBlogger
+## 🎯 What is IntelliBlogger?
+
+IntelliBlogger converts any YouTube video into a well-written blog post using AI. Perfect for content creators, marketers, and educators who want to repurpose video content into written format.
+
+**Simply paste a YouTube link, choose your style, and get a publish-ready blog post.**
+
+## ✨ Features
+
+### 🎥 Smart Conversion
+
+- Paste any YouTube link and get a complete blog post
+- Choose your writing style: Professional, Casual, Witty, or Technical
+- Select content length: Short, Medium, or Long
+
+### ✍️ Edit & Customize
+
+- Built-in rich text editor to refine your content
+- Edit titles and content with ease
+- Real-time preview of your changes
+
+### 📚 Organize Your Content
+
+- Save blogs to your personal dashboard
+- Search and filter your saved posts
+- Access your content anytime
+
+### 📤 Export & Share
+
+- **Download:** PDF, Markdown, or HTML format
+- **Share:** Directly to LinkedIn, Twitter, or Email
+- **Copy:** One-click clipboard copy
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.8 or higher
+- Node.js 18 or higher
+- Redis (for caching)
+- FFmpeg (for audio processing)
+
+### Installation
+
+1.  **Clone the repository**
+
+```bash
+git clone https://github.com/mainak-debnath/IntelliBlogger.git
+cd IntelliBlogger
+```
+
+1.  **Setup Backend**
+
+```bash
+cd Backend
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+1.  **Configure Environment** Create `.env` file in the Backend directory:
+
+```bash
+SECRET_KEY=your-secret-key
+GEMINI_API_KEY=your-gemini-api-key
+ASSEMBLY_API_KEY=your-assemblyai-api-key
+```
+
+1.  **Setup Database**
+
+```bash
+python manage.py migrate
+```
+
+1.  **Start Backend**
+
+```bash
+
+python manage.py runserver
+```
+
+1.  **Setup Frontend** (new terminal)
+
+```bash
+cd Frontend
+npm install
+npm start
+```
+
+1.  **Access the app** at http://localhost:4200
+
+## 💡 How to Use
+
+1.  **Sign up** for a free account
+2.  **Paste** any YouTube video link
+3.  **Choose** your preferred tone and length
+4.  **Generate** your blog post
+5.  **Edit** content using the rich text editor
+6.  **Export** or share your finished blog
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Angular, TypeScript
+- **Backend:** Django, Python
+- **AI:** Google Gemini, AssemblyAI
+- **Database:** SQLite
+
+## 🗺️ Project Roadmap
+
+IntelliBlogger is continuously evolving. Here are some of our planned features and improvements:
+
+- **Future Enhancements:**
+  - Direct publishing integrations with popular CMS platforms (WordPress, Medium).
+  - Advanced content analytics and performance tracking.
+  - Mobile application for on-the-go content generation.
+  - Enhanced UI/UX for a more intuitive user experience.

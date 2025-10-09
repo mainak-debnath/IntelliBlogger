@@ -14,6 +14,7 @@ import { ThemeService } from '../../services/theme.service';
 export class HomeComponent implements OnInit {
   isYearly: boolean = false;
   isMobileMenuOpen: boolean = false;
+  username = localStorage.getItem('username') || '';
 
   constructor(public themeService: ThemeService,
     private auth: AuthService
@@ -29,6 +30,10 @@ export class HomeComponent implements OnInit {
 
   togglePricing(event: any): void {
     this.isYearly = event.target.checked;
+  }
+
+  logout() {
+    this.auth.logout();
   }
 
   toggleTheme(): void {

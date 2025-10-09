@@ -32,6 +32,7 @@ export class BlogDetailsComponent implements OnInit {
   showShareDropdown: boolean = false;
   showDownloadDropdown: boolean = false;
   showAdvancedOptions: boolean = false;
+  isMobileMenuOpen = false;
 
   // Advanced options
   authorName: string = '';
@@ -62,18 +63,25 @@ export class BlogDetailsComponent implements OnInit {
   ngOnInit(): void {
     this.getBlogDetails();
     this.publishDate = new Date().toISOString().split('T')[0];
-    //document.addEventListener('click', this.clickOutsideHandler);
   }
 
-  // ngOnDestroy() {
-  //   document.removeEventListener('click', this.clickOutsideHandler);
-  // }
+  get isAuthenticated(): boolean {
+    return this.auth.isAuthenticated();
+  }
 
 
   onContentChanged(event: any) {
     this.hasUnsavedChanges = true;
-    this.editableContent = event.html; // Keep HTML content
+    this.editableContent = event.html;
     //this.autoSave();
+  }
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   toggleTheme() {

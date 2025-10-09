@@ -20,7 +20,7 @@ export class BlogListComponent implements OnInit {
   searchTerm = '';
   user = localStorage.getItem('username') || '';
   darkMode = false;
-  mobileMenuOpen = false;
+  isMobileMenuOpen: boolean = false;
   showScrollTop = false;
   blogToDelete?: Blog;
 
@@ -41,6 +41,10 @@ export class BlogListComponent implements OnInit {
     this.loadBlogs();
   }
 
+  get isAuthenticated(): boolean {
+    return this.auth.isAuthenticated();
+  }
+
   loadBlogs() {
     this.blogService.getBlogs(this.searchTerm)
       .subscribe({
@@ -51,6 +55,14 @@ export class BlogListComponent implements OnInit {
         },
         error: (err) => console.error('Error fetching blogs', err)
       });
+  }
+
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
   }
 
   onSearch() {
