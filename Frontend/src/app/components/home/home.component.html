@@ -30,9 +30,13 @@
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
             </button>
-
-            <a routerLink="/login" class="btn btn-secondary">Log In</a>
-            <a routerLink="/signup" class="btn btn-primary">Sign Up Free</a>
+            <nav class="nav-isauthenticated" *ngIf="!isAuthenticated">
+                <a routerLink="/login" class="btn btn-secondary">Log In</a>
+                <a routerLink="/signup" class="btn btn-primary">Sign Up Free</a>
+            </nav>
+            <nav class="nav-isauthenticated" *ngIf="isAuthenticated">
+                <button class="btn btn-secondary" (click)="logout()">Logout</button>
+            </nav>
         </div>
 
         <!-- Mobile Menu Button -->

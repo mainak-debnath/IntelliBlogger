@@ -1,3 +1,7 @@
+## 📝 IntelliBlogger: AI-Powered YouTube to Blog Converter
+
+Transform YouTube videos into engaging, professional blog posts in seconds with AI-powered content generation.
+
 ## 🎯 What is IntelliBlogger?
 
 IntelliBlogger converts any YouTube video into a well-written blog post using AI. Perfect for content creators, marketers, and educators who want to repurpose video content into written format.
@@ -104,11 +108,17 @@ npm start
 - **AI:** Google Gemini, AssemblyAI
 - **Database:** SQLite
 
+- **⚠️ Current Limitations**
+
+  - Only English audio is supported at this time
+  - Videos must have clear audio (automated captions may not work well)
+
 ## 🗺️ Project Roadmap
 
 IntelliBlogger is continuously evolving. Here are some of our planned features and improvements:
 
 - **Future Enhancements:**
+
   - Direct publishing integrations with popular CMS platforms (WordPress, Medium).
   - Advanced content analytics and performance tracking.
   - Mobile application for on-the-go content generation.
