@@ -23,6 +23,9 @@ https://github.com/user-attachments/assets/6aab8a84-954d-410d-ad8a-6b8c7ed362ee
 ### Blog details and editing
 https://github.com/user-attachments/assets/21126add-0873-4135-ad8c-1acf73dc8281
 
+### Mobile menu (responsive)
+https://github.com/user-attachments/assets/98553466-b42c-471b-80ee-f366885e35ac
+
 ## 🎯 What is IntelliBlogger?
 
 IntelliBlogger converts any YouTube video into a well-written blog post using AI. Perfect for content creators, marketers, and educators who want to repurpose video content into written format.
