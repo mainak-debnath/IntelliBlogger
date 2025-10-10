@@ -8,13 +8,20 @@ https://github.com/user-attachments/assets/8bb5edc6-bc26-493d-affb-169f0ce310ad
 
 ### Login
 https://github.com/user-attachments/assets/6e053f0b-0cff-4e25-b5ac-8d195842ae29
+
 ### Signup
 https://github.com/user-attachments/assets/39562859-fa05-4552-836c-361bbf0229c2
+
 ### Blog generator
 https://github.com/user-attachments/assets/83418401-2266-4a95-a8df-0bf3e90a0a07
-### Saved blogs page
 
-###Blog details and editing
+### Saved blogs page
+https://github.com/user-attachments/assets/d516a55d-2f6e-4407-96cf-49f76319138b
+
+https://github.com/user-attachments/assets/6aab8a84-954d-410d-ad8a-6b8c7ed362ee
+
+### Blog details and editing
+https://github.com/user-attachments/assets/21126add-0873-4135-ad8c-1acf73dc8281
 
 ## 🎯 What is IntelliBlogger?
 
