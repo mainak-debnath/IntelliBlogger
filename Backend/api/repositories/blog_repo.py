@@ -5,7 +5,7 @@ from typing import Optional
 from django.contrib.auth.models import User
 from django.db.models import QuerySet
 
-from api.models import BlogPost
+from api.models import BlogGenerationJob, BlogPost
 
 
 class BlogRepository:
@@ -61,3 +61,30 @@ class BlogRepository:
         blog_post.generated_content = new_content
         blog_post.save(update_fields=["generated_content"])
         return blog_post
+
+
+class BlogGenerationJobRepository:
+    def create(
+        self,
+        *,
+        user: User,
+        youtube_link: str,
+        normalized_youtube_link: str,
+        tone: str,
+        length: str,
+    ) -> BlogGenerationJob:
+        return BlogGenerationJob.objects.create(
+            user=user,
+            youtube_link=youtube_link,
+            normalized_youtube_link=normalized_youtube_link,
+            tone=tone,
+            length=length,
+        )
+
+    def get_for_user(self, *, pk: int, user: User) -> BlogGenerationJob:
+        return BlogGenerationJob.objects.get(id=pk, user=user)
+
+    def list_queued(self, limit: int = 10) -> QuerySet[BlogGenerationJob]:
+        return BlogGenerationJob.objects.filter(status=BlogGenerationJob.Status.QUEUED)[
+            :limit
+        ]

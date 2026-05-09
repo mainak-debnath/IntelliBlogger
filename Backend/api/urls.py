@@ -2,6 +2,9 @@
 from django.urls import path
 
 from .views import (
+    BlogGenerationJobCreateAPIView,
+    BlogGenerationJobDetailAPIView,
+    BlogGenerationJobProcessAPIView,
     BlogDetailAPIView,
     BlogListAPIView,
     CurrentUserView,
@@ -16,6 +19,21 @@ from .views import (
 
 urlpatterns = [
     path("health/", HealthCheckView.as_view(), name="health"),
+    path(
+        "generation-jobs/",
+        BlogGenerationJobCreateAPIView.as_view(),
+        name="generation-job-create",
+    ),
+    path(
+        "generation-jobs/<int:pk>/",
+        BlogGenerationJobDetailAPIView.as_view(),
+        name="generation-job-detail",
+    ),
+    path(
+        "generation-jobs/<int:pk>/process/",
+        BlogGenerationJobProcessAPIView.as_view(),
+        name="generation-job-process",
+    ),
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", LoginView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", NoThrottleTokenRefreshView.as_view(), name="token_refresh"),

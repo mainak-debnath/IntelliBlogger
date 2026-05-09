@@ -2,7 +2,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from api.models import BlogPost
+from api.models import BlogGenerationJob, BlogPost
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -71,3 +71,23 @@ class BlogPostSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
+
+
+class BlogGenerationJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogGenerationJob
+        fields = [
+            "id",
+            "youtube_link",
+            "tone",
+            "length",
+            "status",
+            "title",
+            "generated_content",
+            "error_message",
+            "started_at",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields

@@ -21,12 +21,14 @@ from api.models import BlogPost
 
 from .repositories.blog_repo import BlogRepository
 from .serializers import (
+    BlogGenerationJobSerializer,
     BlogPostSerializer,
     GenerateBlogRequestSerializer,
     SaveBlogRequestSerializer,
     SignupSerializer,
 )
 from .services.blog_generation import BlogGenerator
+from .services.job_processing import BlogGenerationJobProcessor
 from .services.transcription import TranscriptionService
 from .services.youtube import (
     AudioDownloadError,
@@ -34,6 +36,7 @@ from .services.youtube import (
     YouTubeMetadataFetcher,
     YouTubeUrl,
 )
+from .repositories.blog_repo import BlogGenerationJobRepository
 
 logger = logging.getLogger(__name__)
 
@@ -204,6 +207,48 @@ class GenerateBlogView(APIView):
                     os.remove(audio_path)
                 except OSError:
                     logger.warning("Failed to remove temporary audio file: %s", audio_path)
+
+
+class BlogGenerationJobCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [GenerateBlogThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = GenerateBlogRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        normalized_link = YouTubeUrl.normalize(serializer.validated_data["link"])
+        job = BlogGenerationJobRepository().create(
+            user=request.user,
+            youtube_link=serializer.validated_data["link"],
+            normalized_youtube_link=normalized_link,
+            tone=serializer.validated_data["tone"],
+            length=serializer.validated_data["length"],
+        )
+
+        response_serializer = BlogGenerationJobSerializer(job)
+        return Response(response_serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class BlogGenerationJobDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = []
+
+    def get(self, request, pk):
+        job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
+        serializer = BlogGenerationJobSerializer(job)
+        return Response(serializer.data)
+
+
+class BlogGenerationJobProcessAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = []
+
+    def post(self, request, pk):
+        job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
+        job = BlogGenerationJobProcessor().process(job)
+        serializer = BlogGenerationJobSerializer(job)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SaveBlogView(APIView):

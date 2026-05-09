@@ -2,12 +2,13 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
+from django.core.management import call_command
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from api.models import BlogPost
+from api.models import BlogGenerationJob, BlogPost
 
 
 class BaseAuthenticatedAPITestCase(APITestCase):
@@ -170,3 +171,74 @@ class SaveBlogTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["status"], "updated")
         self.assertEqual(post.generated_content, "<p>updated</p>")
+
+
+class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
+    def test_create_job_returns_accepted(self):
+        response = self.client.post(
+            reverse("generation-job-create"),
+            {
+                "link": "https://youtu.be/abc123xyz99",
+                "tone": "professional",
+                "length": "medium",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertEqual(response.data["status"], BlogGenerationJob.Status.QUEUED)
+        self.assertEqual(BlogGenerationJob.objects.count(), 1)
+
+    @patch("api.services.job_processing.BlogGenerator")
+    @patch("api.services.job_processing.YouTubeMetadataFetcher")
+    @patch("api.services.job_processing.TranscriptionService")
+    @patch("api.services.job_processing.YouTubeAudioDownloader")
+    def test_process_job_updates_status_to_completed(
+        self,
+        mock_downloader,
+        mock_transcription_service,
+        mock_metadata_fetcher,
+        mock_blog_generator,
+    ):
+        job = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+        )
+        mock_downloader.return_value.download_mp3.return_value = "temp-audio.mp3"
+        mock_transcription_service.return_value.transcribe_file.return_value = (
+            "sample transcript"
+        )
+        mock_metadata_fetcher.return_value.get_title.return_value.title = "Demo title"
+        mock_blog_generator.return_value.from_transcript.return_value = "<h1>Blog</h1>"
+
+        with patch(
+            "api.services.job_processing.os.path.exists", return_value=True
+        ), patch("api.services.job_processing.os.remove"):
+            response = self.client.post(
+                reverse("generation-job-process", kwargs={"pk": job.id}),
+                format="json",
+            )
+
+        job.refresh_from_db()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(job.status, BlogGenerationJob.Status.COMPLETED)
+        self.assertEqual(job.generated_content, "<h1>Blog</h1>")
+
+    @patch("api.services.job_processing.BlogGenerationJobProcessor.process")
+    def test_management_command_processes_queued_jobs(self, mock_process):
+        job = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+        )
+
+        call_command("process_blog_generation_jobs", limit=5)
+
+        mock_process.assert_called_once()
+        processed_job = mock_process.call_args.args[0]
+        self.assertEqual(processed_job.id, job.id)
