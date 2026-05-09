@@ -6,6 +6,7 @@ from .views import (
     BlogListAPIView,
     CurrentUserView,
     GenerateBlogView,
+    HealthCheckView,
     LoginView,
     NoThrottleTokenBlacklistView,
     NoThrottleTokenRefreshView,
@@ -14,6 +15,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("health/", HealthCheckView.as_view(), name="health"),
     path("signup/", SignupView.as_view(), name="signup"),
     path("login/", LoginView.as_view(), name="token_obtain_pair"),
     path("token/refresh/", NoThrottleTokenRefreshView.as_view(), name="token_refresh"),
