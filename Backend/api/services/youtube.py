@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import os
 import subprocess
-
-# import sys
 import uuid
 from dataclasses import dataclass
 from typing import Optional
@@ -66,27 +64,28 @@ class YouTubeAudioDownloader:
     def download_mp3(self, link: str) -> str:
         os.makedirs(self.media_root, exist_ok=True)
         output_file = os.path.join(self.media_root, f"{uuid.uuid4().hex}.mp3")
+        ffmpeg_location = getattr(settings, "FFMPEG_LOCATION", None)
+        command = [
+            "yt-dlp",
+            "-x",
+            "--audio-format",
+            "mp3",
+        ]
+
+        if ffmpeg_location:
+            command.extend(["--ffmpeg-location", ffmpeg_location])
+
+        command.extend(["-o", output_file, YouTubeUrl.normalize(link)])
+
         try:
-            # -x extract audio; --audio-format mp3 ensures MP3 output
-            # -o <path> to write exactly to output_file
             subprocess.run(
-                [
-                    "yt-dlp",
-                    "-x",
-                    "--audio-format",
-                    "mp3",
-                    "--ffmpeg-location",
-                    "C:/ffmpeg/bin",
-                    "-o",
-                    output_file,
-                    YouTubeUrl.normalize(link),
-                ],
+                command,
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                text=True,
             )
         except subprocess.CalledProcessError as e:
-            print(f"yt-dlp error: {e.stderr}")
             raise AudioDownloadError(
                 f"yt-dlp failed (code {e.returncode}): {e.stderr[:400]}"
             )
