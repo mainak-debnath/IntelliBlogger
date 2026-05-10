@@ -2,11 +2,10 @@ import logging
 import os
 from urllib.parse import parse_qs, urlparse
 
+from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.utils import DatabaseError
-from rest_framework import generics, status
-from django.conf import settings
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -20,7 +19,7 @@ from rest_framework_simplejwt.views import (
 
 from api.models import BlogPost
 
-from .repositories.blog_repo import BlogRepository
+from .repositories.blog_repo import BlogGenerationJobRepository, BlogRepository
 from .serializers import (
     BlogGenerationJobSerializer,
     BlogPostSerializer,
@@ -28,8 +27,8 @@ from .serializers import (
     SaveBlogRequestSerializer,
     SignupSerializer,
 )
+from .tasks import process_blog_generation_job
 from .services.blog_generation import BlogGenerator
-from .services.job_processing import BlogGenerationJobProcessor
 from .services.transcription import TranscriptionService
 from .services.youtube import (
     AudioDownloadError,
@@ -37,7 +36,6 @@ from .services.youtube import (
     YouTubeMetadataFetcher,
     YouTubeUrl,
 )
-from .repositories.blog_repo import BlogGenerationJobRepository
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +194,7 @@ class GenerateBlogView(APIView):
                 {"detail": "Unable to download audio for this YouTube link."},
                 status=status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
-        except Exception as e:
+        except Exception:
             logger.exception("Blog generation failed for user=%s", request.user.id)
             return Response(
                 {"detail": "Generation failed. Please try again later."},
@@ -282,9 +280,28 @@ class BlogGenerationJobProcessAPIView(APIView):
 
     def post(self, request, pk):
         job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
-        job = BlogGenerationJobProcessor().process(job)
+        if job.status in {
+            job.Status.QUEUED,
+            job.Status.FAILED,
+        }:
+            if job.status == job.Status.FAILED:
+                job.status = job.Status.QUEUED
+                job.error_message = ""
+                job.started_at = None
+                job.completed_at = None
+                job.save(
+                    update_fields=[
+                        "status",
+                        "error_message",
+                        "started_at",
+                        "completed_at",
+                        "updated_at",
+                    ]
+                )
+            process_blog_generation_job.delay(job.id)
+
         serializer = BlogGenerationJobSerializer(job)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
 
 
 class SaveBlogView(APIView):
@@ -361,7 +378,7 @@ class SaveBlogView(APIView):
                 status=status.HTTP_201_CREATED,
             )
 
-        except Exception as e:
+        except Exception:
             logger.exception("Blog save failed for user=%s", request.user.id)
             return Response(
                 {"detail": "Save failed. Please try again later."},
