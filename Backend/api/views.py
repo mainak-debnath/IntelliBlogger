@@ -1,15 +1,21 @@
 import logging
 import os
+import time
 from urllib.parse import parse_qs, urlparse
 
 from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.db.utils import DatabaseError
+from django.http import HttpResponseForbidden, StreamingHttpResponse
+from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import (
     TokenBlacklistView,
@@ -30,6 +36,7 @@ from .serializers import (
 from .tasks import process_blog_generation_job
 from .services.blog_generation import BlogGenerator
 from .services.transcription import TranscriptionService
+from .services.job_notifications import BlogGenerationJobNotifier
 from .services.youtube import (
     AudioDownloadError,
     YouTubeAudioDownloader,
@@ -38,6 +45,16 @@ from .services.youtube import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ServerSentEventRenderer(BaseRenderer):
+    media_type = "text/event-stream"
+    format = "event-stream"
+    charset = None
+    render_style = "binary"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
 
 
 class SignupThrottle(UserRateThrottle):
@@ -272,6 +289,55 @@ class BlogGenerationJobDetailAPIView(APIView):
         job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
         serializer = BlogGenerationJobSerializer(job)
         return Response(serializer.data)
+
+
+class BlogGenerationJobStreamView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = []
+    renderer_classes = [ServerSentEventRenderer]
+
+    def get(self, request):
+        token = request.GET.get("token")
+        if not token:
+            return HttpResponseForbidden("Missing token.")
+
+        try:
+            validated = JWTAuthentication().get_validated_token(token)
+            user = JWTAuthentication().get_user(validated)
+        except (InvalidToken, TokenError):
+            return HttpResponseForbidden("Invalid token.")
+
+        notifier = BlogGenerationJobNotifier()
+        pubsub = notifier.get_pubsub(user.id)
+
+        def event_stream():
+            last_heartbeat = time.monotonic()
+            try:
+                yield ": connected\n\n"
+                while True:
+                    message = pubsub.get_message(
+                        ignore_subscribe_messages=True, timeout=1.0
+                    )
+                    if message and message.get("type") == "message":
+                        payload = message.get("data")
+                        if isinstance(payload, bytes):
+                            payload = payload.decode("utf-8")
+                        yield f"event: job_update\ndata: {payload}\n\n"
+
+                    now = time.monotonic()
+                    if now - last_heartbeat >= 15:
+                        yield ": heartbeat\n\n"
+                        last_heartbeat = now
+            finally:
+                pubsub.close()
+
+        response = StreamingHttpResponse(
+            event_stream(),
+            content_type="text/event-stream",
+        )
+        response["Cache-Control"] = "no-cache"
+        response["X-Accel-Buffering"] = "no"
+        return response
 
 
 class BlogGenerationJobProcessAPIView(APIView):
