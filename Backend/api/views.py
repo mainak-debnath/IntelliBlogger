@@ -10,6 +10,7 @@ from django.db.utils import DatabaseError
 from django.http import HttpResponseForbidden, StreamingHttpResponse
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.renderers import BaseRenderer
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.views import APIView
@@ -44,6 +45,16 @@ from .services.youtube import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+class ServerSentEventRenderer(BaseRenderer):
+    media_type = "text/event-stream"
+    format = "event-stream"
+    charset = None
+    render_style = "binary"
+
+    def render(self, data, accepted_media_type=None, renderer_context=None):
+        return data
 
 
 class SignupThrottle(UserRateThrottle):
@@ -283,6 +294,7 @@ class BlogGenerationJobDetailAPIView(APIView):
 class BlogGenerationJobStreamView(APIView):
     permission_classes = [AllowAny]
     throttle_classes = []
+    renderer_classes = [ServerSentEventRenderer]
 
     def get(self, request):
         token = request.GET.get("token")
