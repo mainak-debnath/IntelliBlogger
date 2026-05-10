@@ -179,6 +179,9 @@ SIMPLE_JWT = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 FFMPEG_LOCATION = os.getenv("FFMPEG_LOCATION")
+MAX_ACTIVE_GENERATION_JOBS_PER_USER = int(
+    os.getenv("MAX_ACTIVE_GENERATION_JOBS_PER_USER", "3")
+)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

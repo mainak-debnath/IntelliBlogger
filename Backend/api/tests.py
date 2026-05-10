@@ -174,6 +174,27 @@ class SaveBlogTests(BaseAuthenticatedAPITestCase):
 
 
 class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
+    def test_list_jobs_returns_user_jobs_in_descending_order(self):
+        older = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/oldjob",
+            normalized_youtube_link="https://www.youtube.com/watch?v=oldjob",
+            tone="professional",
+            length="medium",
+        )
+        newer = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/newjob",
+            normalized_youtube_link="https://www.youtube.com/watch?v=newjob",
+            tone="casual",
+            length="short",
+        )
+
+        response = self.client.get(reverse("generation-job-list"))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual([job["id"] for job in response.data[:2]], [newer.id, older.id])
+
     def test_create_job_returns_accepted(self):
         response = self.client.post(
             reverse("generation-job-create"),
@@ -188,6 +209,54 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         self.assertEqual(response.data["status"], BlogGenerationJob.Status.QUEUED)
         self.assertEqual(BlogGenerationJob.objects.count(), 1)
+
+    def test_create_job_returns_existing_active_duplicate(self):
+        existing = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+            status=BlogGenerationJob.Status.QUEUED,
+        )
+
+        response = self.client.post(
+            reverse("generation-job-create"),
+            {
+                "link": "https://www.youtube.com/watch?v=abc123xyz99",
+                "tone": "professional",
+                "length": "medium",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], existing.id)
+        self.assertEqual(BlogGenerationJob.objects.count(), 1)
+
+    @patch("api.views.settings.MAX_ACTIVE_GENERATION_JOBS_PER_USER", 1)
+    def test_create_job_enforces_active_job_limit(self):
+        BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/firstjob",
+            normalized_youtube_link="https://www.youtube.com/watch?v=firstjob",
+            tone="professional",
+            length="medium",
+            status=BlogGenerationJob.Status.PROCESSING,
+        )
+
+        response = self.client.post(
+            reverse("generation-job-create"),
+            {
+                "link": "https://youtu.be/secondjob",
+                "tone": "technical",
+                "length": "long",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertIn("active generation jobs", response.data["detail"])
 
     @patch("api.services.job_processing.BlogGenerator")
     @patch("api.services.job_processing.YouTubeMetadataFetcher")
