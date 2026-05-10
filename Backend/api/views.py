@@ -6,6 +6,7 @@ from django.core.cache import cache
 from django.db import transaction
 from django.db.utils import DatabaseError
 from rest_framework import generics, status
+from django.conf import settings
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
@@ -218,7 +219,32 @@ class BlogGenerationJobCreateAPIView(APIView):
         serializer.is_valid(raise_exception=True)
 
         normalized_link = YouTubeUrl.normalize(serializer.validated_data["link"])
-        job = BlogGenerationJobRepository().create(
+        repo = BlogGenerationJobRepository()
+
+        duplicate_job = repo.get_active_duplicate(
+            user=request.user,
+            normalized_youtube_link=normalized_link,
+            tone=serializer.validated_data["tone"],
+            length=serializer.validated_data["length"],
+        )
+        if duplicate_job:
+            response_serializer = BlogGenerationJobSerializer(duplicate_job)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+        max_active_jobs = getattr(settings, "MAX_ACTIVE_GENERATION_JOBS_PER_USER", 3)
+        active_jobs = repo.count_active_for_user(user=request.user)
+        if active_jobs >= max_active_jobs:
+            return Response(
+                {
+                    "detail": (
+                        f"You already have {max_active_jobs} active generation jobs. "
+                        "Please wait for one to finish before starting another."
+                    )
+                },
+                status=status.HTTP_429_TOO_MANY_REQUESTS,
+            )
+
+        job = repo.create(
             user=request.user,
             youtube_link=serializer.validated_data["link"],
             normalized_youtube_link=normalized_link,
@@ -228,6 +254,16 @@ class BlogGenerationJobCreateAPIView(APIView):
 
         response_serializer = BlogGenerationJobSerializer(job)
         return Response(response_serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class BlogGenerationJobListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = []
+
+    def get(self, request):
+        jobs = BlogGenerationJobRepository().list_for_user(user=request.user)
+        serializer = BlogGenerationJobSerializer(jobs, many=True)
+        return Response(serializer.data)
 
 
 class BlogGenerationJobDetailAPIView(APIView):

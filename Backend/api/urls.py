@@ -4,6 +4,7 @@ from django.urls import path
 from .views import (
     BlogGenerationJobCreateAPIView,
     BlogGenerationJobDetailAPIView,
+    BlogGenerationJobListAPIView,
     BlogGenerationJobProcessAPIView,
     BlogDetailAPIView,
     BlogListAPIView,
@@ -19,6 +20,11 @@ from .views import (
 
 urlpatterns = [
     path("health/", HealthCheckView.as_view(), name="health"),
+    path(
+        "generation-jobs/list/",
+        BlogGenerationJobListAPIView.as_view(),
+        name="generation-job-list",
+    ),
     path(
         "generation-jobs/",
         BlogGenerationJobCreateAPIView.as_view(),

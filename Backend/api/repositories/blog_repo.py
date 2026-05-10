@@ -84,7 +84,42 @@ class BlogGenerationJobRepository:
     def get_for_user(self, *, pk: int, user: User) -> BlogGenerationJob:
         return BlogGenerationJob.objects.get(id=pk, user=user)
 
+    def list_for_user(self, *, user: User) -> QuerySet[BlogGenerationJob]:
+        return BlogGenerationJob.objects.filter(user=user).order_by("-created_at")
+
     def list_queued(self, limit: int = 10) -> QuerySet[BlogGenerationJob]:
         return BlogGenerationJob.objects.filter(status=BlogGenerationJob.Status.QUEUED)[
             :limit
         ]
+
+    def get_active_duplicate(
+        self,
+        *,
+        user: User,
+        normalized_youtube_link: str,
+        tone: str,
+        length: str,
+    ) -> Optional[BlogGenerationJob]:
+        return (
+            BlogGenerationJob.objects.filter(
+                user=user,
+                normalized_youtube_link=normalized_youtube_link,
+                tone=tone,
+                length=length,
+                status__in=[
+                    BlogGenerationJob.Status.QUEUED,
+                    BlogGenerationJob.Status.PROCESSING,
+                ],
+            )
+            .order_by("-created_at")
+            .first()
+        )
+
+    def count_active_for_user(self, *, user: User) -> int:
+        return BlogGenerationJob.objects.filter(
+            user=user,
+            status__in=[
+                BlogGenerationJob.Status.QUEUED,
+                BlogGenerationJob.Status.PROCESSING,
+            ],
+        ).count()

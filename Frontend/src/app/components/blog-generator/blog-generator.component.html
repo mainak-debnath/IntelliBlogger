@@ -176,6 +176,56 @@
 
     <!-- Output Section -->
     <div class="gen-output-section">
+        <section *ngIf="generationJobs.length" class="job-board">
+            <div class="job-board-header">
+                <div>
+                    <h2 class="job-board-title">Generation Jobs</h2>
+                    <p class="job-board-subtitle">Your jobs keep their state even if you navigate away. Open any finished result or resume queued work here.</p>
+                </div>
+            </div>
+
+            <div *ngIf="activeJobs.length" class="job-group">
+                <h3 class="job-group-title">In Progress</h3>
+                <div class="job-list">
+                    <article *ngFor="let job of activeJobs; trackBy: trackByJobId" class="job-card">
+                        <div class="job-card-main">
+                            <div class="job-status-chip" [class.processing]="job.status === 'processing'" [class.queued]="job.status === 'queued'">
+                                {{ job.status }}
+                            </div>
+                            <h4 class="job-card-title">{{ job.youtube_link }}</h4>
+                            <p class="job-card-meta">{{ job.tone }} | {{ job.length }} | Started {{ job.created_at | date:'short' }}</p>
+                        </div>
+                        <div class="job-card-actions">
+                            <button class="btn btn-secondary" *ngIf="job.status === 'queued'" (click)="resumeJob(job)">
+                                Resume
+                            </button>
+                            <button class="btn btn-secondary" *ngIf="job.status === 'processing'" (click)="openJob(job)">
+                                Track
+                            </button>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div *ngIf="recentCompletedJobs.length" class="job-group">
+                <h3 class="job-group-title">Recent Generations</h3>
+                <div class="job-list">
+                    <article *ngFor="let job of recentCompletedJobs; trackBy: trackByJobId" class="job-card completed">
+                        <div class="job-card-main">
+                            <div class="job-status-chip completed">completed</div>
+                            <h4 class="job-card-title">{{ job.title || job.youtube_link }}</h4>
+                            <p class="job-card-meta">{{ job.tone }} | {{ job.length }} | Finished {{ job.completed_at | date:'short' }}</p>
+                        </div>
+                        <div class="job-card-actions">
+                            <button class="btn btn-secondary" (click)="openJob(job)">
+                                Open Result
+                            </button>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </section>
+
         <!-- How It Works - Placeholder -->
         <div *ngIf="!loading && !blogResponse" class="gen-placeholder-content">
             <h2 class="gen-placeholder-title">How It Works</h2>
@@ -202,8 +252,8 @@
         <div *ngIf="loading" class="gen-loading-container">
             <div class="gen-loading-spinner">
                 <div class="spinner"></div>
-                <div class="gen-loading-text">Analyzing video and generating your blog post...</div>
-                <p class="gen-loading-subtext">This may take up to a minute for longer videos.</p>
+                <div class="gen-loading-text">{{ loadingMessage }}</div>
+                <p class="gen-loading-subtext">You can leave this page and come back later. Your active generation jobs will still be listed here.</p>
             </div>
         </div>
 
