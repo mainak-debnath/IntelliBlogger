@@ -311,6 +311,7 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
 
   private handleJobUpdate(job: BlogGenerationJob, notify: boolean): void {
     this.upsertJob(job);
+    this.restoreFormFromJob(job);
 
     if (job.status === 'failed') {
       this.untrackJob(job.id);
@@ -348,6 +349,14 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
 
   private setActiveJob(jobId: number): void {
     this.activeJobId = jobId;
+  }
+
+  private restoreFormFromJob(job: BlogGenerationJob): void {
+    this.linkForm.patchValue({
+      link: job.youtube_link,
+      tone: job.tone,
+      length: job.length
+    }, { emitEvent: false });
   }
 
   private getCurrentActiveJob(): BlogGenerationJob | undefined {

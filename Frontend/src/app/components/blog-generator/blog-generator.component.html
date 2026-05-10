@@ -200,7 +200,7 @@
                                 Resume
                             </button>
                             <button class="btn btn-secondary" *ngIf="job.status === 'processing'" (click)="openJob(job)">
-                                Monitor
+                                Track
                             </button>
                         </div>
                     </article>
@@ -208,7 +208,7 @@
             </div>
 
             <div *ngIf="recentCompletedJobs.length" class="job-group">
-                <h3 class="job-group-title">Recent Results</h3>
+                <h3 class="job-group-title">Recent Generations</h3>
                 <div class="job-list">
                     <article *ngFor="let job of recentCompletedJobs; trackBy: trackByJobId" class="job-card completed">
                         <div class="job-card-main">
