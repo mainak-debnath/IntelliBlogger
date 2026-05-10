@@ -33,16 +33,17 @@ from .serializers import (
     SaveBlogRequestSerializer,
     SignupSerializer,
 )
-from .tasks import process_blog_generation_job
 from .services.blog_generation import BlogGenerator
-from .services.transcription import TranscriptionService
 from .services.job_notifications import BlogGenerationJobNotifier
+from .services.job_processing import BlogGenerationJobProcessor
+from .services.transcription import TranscriptionService
 from .services.youtube import (
     AudioDownloadError,
     YouTubeAudioDownloader,
     YouTubeMetadataFetcher,
     YouTubeUrl,
 )
+from .tasks import process_blog_generation_job
 
 logger = logging.getLogger(__name__)
 
@@ -58,20 +59,14 @@ class ServerSentEventRenderer(BaseRenderer):
 
 
 class SignupThrottle(UserRateThrottle):
-    """10 requests per minute per user/IP."""
-
     scope = "signup"
 
 
 class LoginThrottle(UserRateThrottle):
-    """10 login attempts per minute per user/IP."""
-
     scope = "login"
 
 
 class GenerateBlogThrottle(UserRateThrottle):
-    """3 blog generations per hour per authenticated user."""
-
     scope = "generate_blog"
 
 
@@ -85,7 +80,6 @@ class SignupView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Create JWT tokens for convenience (so client can auto-login)
         refresh = RefreshToken.for_user(user)
         return Response(
             {
@@ -99,10 +93,6 @@ class SignupView(generics.CreateAPIView):
 
 
 class LoginView(TokenObtainPairView):
-    """
-    JWT login with 10 attempts/minute throttle.
-    """
-
     permission_classes = [AllowAny]
     throttle_classes = [LoginThrottle]
 
@@ -153,12 +143,6 @@ class HealthCheckView(APIView):
 
 
 class GenerateBlogView(APIView):
-    """
-    POST /api/generate-blog/
-    Body: { "link": "https://youtube.com/..." }
-    Requires: Authorization: Bearer <access_token>
-    """
-
     throttle_classes = [GenerateBlogThrottle]
     permission_classes = [IsAuthenticated]
 
@@ -194,7 +178,9 @@ class GenerateBlogView(APIView):
 
             title = YouTubeMetadataFetcher().get_title(normalized_link).title
             blog_content = BlogGenerator().from_transcript(
-                transcription=transcription, tone=tone, length=length
+                transcription=transcription,
+                tone=tone,
+                length=length,
             )
             payload = {
                 "content": blog_content,
@@ -202,9 +188,8 @@ class GenerateBlogView(APIView):
                 "tone": tone,
                 "length": length,
             }
-            cache.set(blog_cache_key, payload, timeout=60 * 60 * 24)  # cache for 24h
+            cache.set(blog_cache_key, payload, timeout=60 * 60 * 24)
             return Response(payload, status=status.HTTP_201_CREATED)
-
         except AudioDownloadError as exc:
             logger.warning("Audio download failed for user=%s: %s", request.user.id, exc)
             return Response(
@@ -346,10 +331,8 @@ class BlogGenerationJobProcessAPIView(APIView):
 
     def post(self, request, pk):
         job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
-        if job.status in {
-            job.Status.QUEUED,
-            job.Status.FAILED,
-        }:
+        response_status = status.HTTP_202_ACCEPTED
+        if job.status in {job.Status.QUEUED, job.Status.FAILED}:
             if job.status == job.Status.FAILED:
                 job.status = job.Status.QUEUED
                 job.error_message = ""
@@ -364,21 +347,17 @@ class BlogGenerationJobProcessAPIView(APIView):
                         "updated_at",
                     ]
                 )
-            process_blog_generation_job.delay(job.id)
+            if settings.JOB_EXECUTION_MODE == "sync":
+                job = BlogGenerationJobProcessor().process(job)
+                response_status = status.HTTP_200_OK
+            else:
+                process_blog_generation_job.delay(job.id)
 
         serializer = BlogGenerationJobSerializer(job)
-        return Response(serializer.data, status=status.HTTP_202_ACCEPTED)
+        return Response(serializer.data, status=response_status)
 
 
 class SaveBlogView(APIView):
-    """
-    POST /api/save-blog/
-    Body: { "title": "...", "content": "...", "link": "https://youtube.com/..." }
-    Requires: Authorization: Bearer <access_token>
-
-    This endpoint saves a generated blog to the database.
-    """
-
     permission_classes = [IsAuthenticated]
     throttle_classes = []
 
@@ -439,11 +418,10 @@ class SaveBlogView(APIView):
                     "title": post.youtube_title,
                     "tone": post.tone,
                     "length": post.length,
-                    "message": "Blog saved successfully!",
+                "message": "Blog saved successfully!",
                 },
                 status=status.HTTP_201_CREATED,
             )
-
         except Exception:
             logger.exception("Blog save failed for user=%s", request.user.id)
             return Response(
@@ -465,12 +443,6 @@ class BlogListAPIView(APIView):
 
 
 class BlogDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET  /blogs/<id>   -> Retrieve a single blog post (only for the owner)
-    DELETE /blogs/<id> -> Delete the blog post (only for the owner)
-    PUT    /blogs/<id>/   -> Update the entire blog post
-    """
-
     serializer_class = BlogPostSerializer
     permission_classes = [IsAuthenticated]
     throttle_classes = []
@@ -483,10 +455,7 @@ class BlogDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         return Response({"success": True}, status=status.HTTP_204_NO_CONTENT)
 
     def partial_update(self, request, *args, **kwargs):
-        """Handle PATCH requests for partial updates"""
         instance = self.get_object()
-
-        # Only allow updating these fields
         allowed_fields = ["youtube_title", "generated_content"]
         filtered_data = {
             key: value for key, value in request.data.items() if key in allowed_fields
@@ -495,5 +464,4 @@ class BlogDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
         serializer = self.get_serializer(instance, data=filtered_data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-
         return Response(serializer.data)

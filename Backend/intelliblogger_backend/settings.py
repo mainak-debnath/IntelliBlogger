@@ -7,21 +7,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 def get_bool_env(name: str, default: bool = False) -> bool:
     return os.getenv(name, str(default)).strip().lower() in {"1", "true", "yes", "on"}
+
 
 DEBUG = get_bool_env("DEBUG", False)
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-only-secret-key")
 if not DEBUG and SECRET_KEY == "dev-only-secret-key":
     raise RuntimeError("SECRET_KEY must be set when DEBUG is disabled.")
 
-ALLOWED_HOSTS = [host.strip() for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",") if host.strip()]
-
-
-# Application definition
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+    if host.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -78,10 +79,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "intelliblogger_backend.wsgi.application"
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     "default": dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
@@ -89,10 +86,6 @@ DATABASES = {
         conn_health_checks=True,
     )
 }
-
-
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -109,28 +102,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = "en-us"
-
 TIME_ZONE = "UTC"
-
 USE_I18N = True
-
 USE_TZ = True
-
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -182,7 +161,6 @@ FFMPEG_LOCATION = os.getenv("FFMPEG_LOCATION")
 MAX_ACTIVE_GENERATION_JOBS_PER_USER = int(
     os.getenv("MAX_ACTIVE_GENERATION_JOBS_PER_USER", "3")
 )
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
@@ -239,3 +217,4 @@ CELERY_TASK_EAGER_PROPAGATES = get_bool_env(
     "CELERY_TASK_EAGER_PROPAGATES", True
 )
 JOB_EVENT_STREAM_URL = os.getenv("JOB_EVENT_STREAM_URL", CELERY_BROKER_URL)
+JOB_EXECUTION_MODE = os.getenv("JOB_EXECUTION_MODE", "celery").strip().lower()

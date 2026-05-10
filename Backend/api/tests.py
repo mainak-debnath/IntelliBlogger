@@ -279,6 +279,27 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
         mock_delay.assert_called_once_with(job.id)
 
+    @patch("api.views.settings.JOB_EXECUTION_MODE", "sync")
+    @patch("api.views.BlogGenerationJobProcessor.process")
+    def test_process_job_runs_inline_when_sync_mode_is_enabled(self, mock_process):
+        job = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+        )
+        completed_job = BlogGenerationJob.objects.get(pk=job.id)
+        completed_job.status = BlogGenerationJob.Status.COMPLETED
+        mock_process.return_value = completed_job
+
+        response = self.client.post(
+            reverse("generation-job-process", kwargs={"pk": job.id}),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        mock_process.assert_called_once()
     @patch("api.services.job_processing.BlogGenerator")
     @patch("api.services.job_processing.YouTubeMetadataFetcher")
     @patch("api.services.job_processing.TranscriptionService")
