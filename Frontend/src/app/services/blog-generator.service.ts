@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
+import { BlogGenerationJob } from '../models/blog-generation-job';
 import { BlogResponse } from '../models/blog-response';
 import { SaveBlogRequest } from '../models/save-blog-request';
 import { SaveBlogResponse } from '../models/save-blog-response';
@@ -14,9 +15,9 @@ export class BlogGeneratorService {
 
   constructor(private http: HttpClient) { }
 
-  generate(link: string, tone: string, length: string): Observable<BlogResponse> {
-    return this.http.post<BlogResponse>(
-      `${this.baseUrl}/generate-blog/`,
+  createGenerationJob(link: string, tone: string, length: string): Observable<BlogGenerationJob> {
+    return this.http.post<BlogGenerationJob>(
+      `${this.baseUrl}/generation-jobs/`,
       { link, tone, length },
       {
         headers: { Authorization: `Bearer ${localStorage.getItem('access')}` }
@@ -29,6 +30,51 @@ export class BlogGeneratorService {
         return throwError(() => err);
       })
     );
+  }
+
+  processGenerationJob(jobId: number): Observable<BlogGenerationJob> {
+    return this.http.post<BlogGenerationJob>(
+      `${this.baseUrl}/generation-jobs/${jobId}/process/`,
+      {},
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access')}` }
+      }
+    ).pipe(
+      catchError(err => {
+        if (err.status === 429) {
+          alert('Rate limit reached. Please wait before trying again.');
+        }
+        return throwError(() => err);
+      })
+    );
+  }
+
+  getGenerationJob(jobId: number): Observable<BlogGenerationJob> {
+    return this.http.get<BlogGenerationJob>(
+      `${this.baseUrl}/generation-jobs/${jobId}/`,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access')}` }
+      }
+    );
+  }
+
+  listGenerationJobs(): Observable<BlogGenerationJob[]> {
+    return this.http.get<BlogGenerationJob[]>(
+      `${this.baseUrl}/generation-jobs/list/`,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('access')}` }
+      }
+    );
+  }
+
+  toBlogResponse(job: BlogGenerationJob): BlogResponse {
+    return {
+      id: job.id,
+      title: job.title,
+      content: job.generated_content,
+      tone: job.tone,
+      length: job.length
+    };
   }
 
   saveBlog(request: SaveBlogRequest): Observable<SaveBlogResponse> {
