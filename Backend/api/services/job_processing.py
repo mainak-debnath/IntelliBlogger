@@ -9,6 +9,7 @@ from django.utils import timezone
 from api.models import BlogGenerationJob
 
 from .blog_generation import BlogGenerator
+from .job_notifications import BlogGenerationJobNotifier
 from .transcription import TranscriptionService
 from .youtube import AudioDownloadError, YouTubeAudioDownloader, YouTubeMetadataFetcher
 
@@ -16,6 +17,9 @@ logger = logging.getLogger(__name__)
 
 
 class BlogGenerationJobProcessor:
+    def __init__(self) -> None:
+        self.notifier = BlogGenerationJobNotifier()
+
     def process(self, job: BlogGenerationJob) -> BlogGenerationJob:
         if job.status not in {
             BlogGenerationJob.Status.QUEUED,
@@ -28,6 +32,7 @@ class BlogGenerationJobProcessor:
         job.started_at = timezone.now()
         job.error_message = ""
         job.save(update_fields=["status", "started_at", "error_message", "updated_at"])
+        self.notifier.notify(job)
 
         parsed_link = job.normalized_youtube_link
         video_id = parsed_link.split("v=")[-1]
@@ -52,6 +57,7 @@ class BlogGenerationJobProcessor:
                         "updated_at",
                     ]
                 )
+                self.notifier.notify(job)
                 return job
 
             transcription = cache.get(transcript_cache_key)
@@ -88,6 +94,7 @@ class BlogGenerationJobProcessor:
                     "updated_at",
                 ]
             )
+            self.notifier.notify(job)
             return job
         except AudioDownloadError:
             message = "Unable to download audio for this YouTube link."
@@ -98,6 +105,7 @@ class BlogGenerationJobProcessor:
             job.save(
                 update_fields=["status", "error_message", "completed_at", "updated_at"]
             )
+            self.notifier.notify(job)
             return job
         except Exception:
             logger.exception("Job %s failed during generation", job.id)
@@ -107,6 +115,7 @@ class BlogGenerationJobProcessor:
             job.save(
                 update_fields=["status", "error_message", "completed_at", "updated_at"]
             )
+            self.notifier.notify(job)
             return job
         finally:
             if audio_path and os.path.exists(audio_path):

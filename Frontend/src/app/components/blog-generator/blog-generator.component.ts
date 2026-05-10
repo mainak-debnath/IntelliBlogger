@@ -3,12 +3,13 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterModule } from '@angular/router';
-import { EMPTY, Subscription, finalize, interval, switchMap, take, tap } from 'rxjs';
+import { Subscription, finalize, switchMap, take, tap } from 'rxjs';
 import { BlogGenerationJob } from '../../models/blog-generation-job';
 import { BlogResponse } from '../../models/blog-response';
 import { SaveBlogResponse } from '../../models/save-blog-response';
 import { AuthService } from '../../services/auth.service';
 import { BlogGeneratorService } from '../../services/blog-generator.service';
+import { GenerationJobStreamService } from '../../services/generation-job-stream.service';
 import { ThemeService } from '../../services/theme.service';
 import { ToastService } from '../../services/toast.service';
 
@@ -32,7 +33,7 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
   showUpdateConfirmModal = false;
   existingBlogId: number | null = null;
   isMobileMenuOpen = false;
-  private pollSubscription?: Subscription;
+  private streamSubscription?: Subscription;
 
   constructor(
     private fb: FormBuilder,
@@ -41,7 +42,8 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private router: Router,
     private sanitizer: DomSanitizer,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private generationJobStreamService: GenerationJobStreamService
   ) {
     this.linkForm = this.fb.group({
       link: ['', [Validators.required, Validators.pattern(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/)]],
@@ -52,11 +54,12 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadGenerationJobs();
-    this.startJobPolling();
+    this.startJobStream();
   }
 
   ngOnDestroy(): void {
-    this.pollSubscription?.unsubscribe();
+    this.streamSubscription?.unsubscribe();
+    this.generationJobStreamService.disconnect();
   }
 
   get isAuthenticated(): boolean {
@@ -270,17 +273,21 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
       });
   }
 
-  private startJobPolling(): void {
-    this.pollSubscription = interval(4000).pipe(
-      switchMap(() => this.blogGeneratorService.listGenerationJobs())
-    ).subscribe({
-      next: (jobs) => {
-        this.generationJobs = jobs;
+  private startJobStream(): void {
+    const token = this.auth.accessToken;
+    if (!token) {
+      return;
+    }
+
+    this.generationJobStreamService.connect(token);
+    this.streamSubscription = this.generationJobStreamService.jobUpdates$.subscribe({
+      next: (job) => {
+        this.handleJobUpdate(job, job.status === 'completed' || job.status === 'failed');
         this.restoreTrackedJobs();
         this.restoreActiveJobResult();
       },
       error: (err) => {
-        console.error('Error polling generation jobs', err);
+        console.error('Error streaming generation jobs', err);
       }
     });
   }
