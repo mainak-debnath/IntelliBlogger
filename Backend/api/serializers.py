@@ -2,7 +2,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 
-from api.models import BlogPost
+from api.models import BlogGenerationJob, BlogPost
 
 
 class SignupSerializer(serializers.ModelSerializer):
@@ -28,6 +28,28 @@ class SignupSerializer(serializers.ModelSerializer):
         return user
 
 
+class GenerateBlogRequestSerializer(serializers.Serializer):
+    ALLOWED_TONES = ("professional", "casual", "witty", "technical")
+    ALLOWED_LENGTHS = ("short", "medium", "long")
+
+    link = serializers.URLField()
+    tone = serializers.ChoiceField(choices=ALLOWED_TONES, default="professional")
+    length = serializers.ChoiceField(choices=ALLOWED_LENGTHS, default="medium")
+
+
+class SaveBlogRequestSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=300)
+    content = serializers.CharField()
+    link = serializers.URLField()
+    tone = serializers.ChoiceField(
+        choices=GenerateBlogRequestSerializer.ALLOWED_TONES, default="professional"
+    )
+    length = serializers.ChoiceField(
+        choices=GenerateBlogRequestSerializer.ALLOWED_LENGTHS, default="medium"
+    )
+    force_update = serializers.BooleanField(default=False)
+
+
 class BlogPostSerializer(serializers.ModelSerializer):
     class Meta:
         model = BlogPost
@@ -39,5 +61,33 @@ class BlogPostSerializer(serializers.ModelSerializer):
             "tone",
             "length",
             "created_at",
+            "updated_at",
         ]
-        read_only_fields = ["id", "tone", "length", "youtube_link", "created_at"]
+        read_only_fields = [
+            "id",
+            "tone",
+            "length",
+            "youtube_link",
+            "created_at",
+            "updated_at",
+        ]
+
+
+class BlogGenerationJobSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = BlogGenerationJob
+        fields = [
+            "id",
+            "youtube_link",
+            "tone",
+            "length",
+            "status",
+            "title",
+            "generated_content",
+            "error_message",
+            "started_at",
+            "completed_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = fields

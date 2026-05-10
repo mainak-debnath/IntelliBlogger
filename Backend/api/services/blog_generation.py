@@ -3,17 +3,15 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-import google.generativeai as genai
 import markdown
-from dotenv import load_dotenv
-
-load_dotenv()
 
 
 class BlogGenerator:
     def __init__(
         self, api_key: Optional[str] = None, model_name: str = "gemini-2.5-flash"
     ):
+        import google.generativeai as genai
+
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise RuntimeError("GEMINI_API_KEY is not configured.")

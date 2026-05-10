@@ -1,8 +1,10 @@
-# from django.contrib.auth import authenticate
+import logging
+import os
 from urllib.parse import parse_qs, urlparse
 
 from django.core.cache import cache
 from django.db import transaction
+from django.db.utils import DatabaseError
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -18,10 +20,25 @@ from rest_framework_simplejwt.views import (
 from api.models import BlogPost
 
 from .repositories.blog_repo import BlogRepository
-from .serializers import BlogPostSerializer, SignupSerializer
+from .serializers import (
+    BlogGenerationJobSerializer,
+    BlogPostSerializer,
+    GenerateBlogRequestSerializer,
+    SaveBlogRequestSerializer,
+    SignupSerializer,
+)
 from .services.blog_generation import BlogGenerator
+from .services.job_processing import BlogGenerationJobProcessor
 from .services.transcription import TranscriptionService
-from .services.youtube import YouTubeAudioDownloader, YouTubeMetadataFetcher, YouTubeUrl
+from .services.youtube import (
+    AudioDownloadError,
+    YouTubeAudioDownloader,
+    YouTubeMetadataFetcher,
+    YouTubeUrl,
+)
+from .repositories.blog_repo import BlogGenerationJobRepository
+
+logger = logging.getLogger(__name__)
 
 
 class SignupThrottle(UserRateThrottle):
@@ -90,6 +107,35 @@ class CurrentUserView(APIView):
         return Response({"username": request.user.username})
 
 
+class HealthCheckView(APIView):
+    permission_classes = [AllowAny]
+    throttle_classes = []
+
+    def get(self, request):
+        health = {"status": "ok", "database": "ok", "cache": "ok"}
+
+        try:
+            BlogPost.objects.exists()
+        except DatabaseError:
+            health["status"] = "degraded"
+            health["database"] = "error"
+
+        try:
+            cache.set("healthcheck", "ok", timeout=5)
+            if cache.get("healthcheck") != "ok":
+                raise RuntimeError("cache round-trip failed")
+        except Exception:
+            health["status"] = "degraded"
+            health["cache"] = "error"
+
+        status_code = (
+            status.HTTP_200_OK
+            if health["status"] == "ok"
+            else status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+        return Response(health, status=status_code)
+
+
 class GenerateBlogView(APIView):
     """
     POST /api/generate-blog/
@@ -100,23 +146,12 @@ class GenerateBlogView(APIView):
     throttle_classes = [GenerateBlogThrottle]
     permission_classes = [IsAuthenticated]
 
-    @transaction.atomic
     def post(self, request, *args, **kwargs):
-        link = request.data.get("link")
-        tone = request.data.get("tone", "professional")
-        length = request.data.get("length", "medium")
-        if not link:
-            return Response(
-                {"detail": "Missing 'link' field."}, status=status.HTTP_400_BAD_REQUEST
-            )
-        ALLOWED_TONES = ["professional", "casual", "witty", "technical"]
-        ALLOWED_LENGTHS = ["short", "medium", "long"]
-
-        if tone not in ALLOWED_TONES or length not in ALLOWED_LENGTHS:
-            return Response(
-                {"detail": "Invalid tone or length specified."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer = GenerateBlogRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        link = serializer.validated_data["link"]
+        tone = serializer.validated_data["tone"]
+        length = serializer.validated_data["length"]
         normalized_link = YouTubeUrl.normalize(link)
         parsed = urlparse(normalized_link)
         query = parse_qs(parsed.query)
@@ -135,12 +170,13 @@ class GenerateBlogView(APIView):
         transcription = cache.get(transcript_cache_key)
 
         try:
+            audio_path = None
             if not transcription:
-                audio_path = YouTubeAudioDownloader().download_mp3(link)
+                audio_path = YouTubeAudioDownloader().download_mp3(normalized_link)
                 transcription = TranscriptionService().transcribe_file(audio_path)
                 cache.set(transcript_cache_key, transcription, timeout=60 * 60 * 24)
 
-            title = YouTubeMetadataFetcher().get_title(link).title
+            title = YouTubeMetadataFetcher().get_title(normalized_link).title
             blog_content = BlogGenerator().from_transcript(
                 transcription=transcription, tone=tone, length=length
             )
@@ -153,12 +189,66 @@ class GenerateBlogView(APIView):
             cache.set(blog_cache_key, payload, timeout=60 * 60 * 24)  # cache for 24h
             return Response(payload, status=status.HTTP_201_CREATED)
 
-        except Exception as e:
-            # Log for debugging
+        except AudioDownloadError as exc:
+            logger.warning("Audio download failed for user=%s: %s", request.user.id, exc)
             return Response(
-                {"detail": f"Generation failed: {str(e)}"},
+                {"detail": "Unable to download audio for this YouTube link."},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        except Exception as e:
+            logger.exception("Blog generation failed for user=%s", request.user.id)
+            return Response(
+                {"detail": "Generation failed. Please try again later."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+        finally:
+            if "audio_path" in locals() and audio_path and os.path.exists(audio_path):
+                try:
+                    os.remove(audio_path)
+                except OSError:
+                    logger.warning("Failed to remove temporary audio file: %s", audio_path)
+
+
+class BlogGenerationJobCreateAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [GenerateBlogThrottle]
+
+    def post(self, request, *args, **kwargs):
+        serializer = GenerateBlogRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        normalized_link = YouTubeUrl.normalize(serializer.validated_data["link"])
+        job = BlogGenerationJobRepository().create(
+            user=request.user,
+            youtube_link=serializer.validated_data["link"],
+            normalized_youtube_link=normalized_link,
+            tone=serializer.validated_data["tone"],
+            length=serializer.validated_data["length"],
+        )
+
+        response_serializer = BlogGenerationJobSerializer(job)
+        return Response(response_serializer.data, status=status.HTTP_202_ACCEPTED)
+
+
+class BlogGenerationJobDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = []
+
+    def get(self, request, pk):
+        job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
+        serializer = BlogGenerationJobSerializer(job)
+        return Response(serializer.data)
+
+
+class BlogGenerationJobProcessAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = []
+
+    def post(self, request, pk):
+        job = BlogGenerationJobRepository().get_for_user(pk=pk, user=request.user)
+        job = BlogGenerationJobProcessor().process(job)
+        serializer = BlogGenerationJobSerializer(job)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class SaveBlogView(APIView):
@@ -175,21 +265,16 @@ class SaveBlogView(APIView):
 
     @transaction.atomic
     def post(self, request, *args, **kwargs):
-        title = request.data.get("title")
-        content = request.data.get("content")
-        link = request.data.get("link")
-        tone = request.data.get("tone", "professional")
-        length = request.data.get("length", "medium")
-        force_update = request.data.get("force_update", False)
-
-        if not all([title, content, link]):
-            return Response(
-                {"detail": "Missing required fields: title, content, or link."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        serializer = SaveBlogRequestSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        title = serializer.validated_data["title"]
+        content = serializer.validated_data["content"]
+        link = YouTubeUrl.normalize(serializer.validated_data["link"])
+        tone = serializer.validated_data["tone"]
+        length = serializer.validated_data["length"]
+        force_update = serializer.validated_data["force_update"]
 
         try:
-            # Check if this blog already exists for this user
             repo = BlogRepository()
             existing_blog = repo.get_by_params(
                 user=request.user, youtube_link=link, tone=tone, length=length
@@ -241,13 +326,9 @@ class SaveBlogView(APIView):
             )
 
         except Exception as e:
-            import logging
-
-            logger = logging.getLogger(__name__)
-            logger.error(f"Blog save failed for user {request.user.id}: {str(e)}")
-
+            logger.exception("Blog save failed for user=%s", request.user.id)
             return Response(
-                {"detail": f"Save failed: {str(e)}"},
+                {"detail": "Save failed. Please try again later."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

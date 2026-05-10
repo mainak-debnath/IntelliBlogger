@@ -3,14 +3,11 @@ from __future__ import annotations
 import os
 from typing import Optional
 
-import assemblyai as aai
-from dotenv import load_dotenv
-
-load_dotenv()
-
 
 class TranscriptionService:
     def __init__(self, api_key: Optional[str] = None):
+        import assemblyai as aai
+
         self.api_key = api_key or os.getenv("ASSEMBLY_API_KEY")
         if not self.api_key:
             raise RuntimeError("ASSEMBLY_API_KEY is not configured.")
