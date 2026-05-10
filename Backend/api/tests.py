@@ -9,6 +9,7 @@ from rest_framework.test import APITestCase
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.models import BlogGenerationJob, BlogPost
+from api.tasks import process_blog_generation_job
 
 
 class BaseAuthenticatedAPITestCase(APITestCase):
@@ -258,11 +259,31 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertIn("active generation jobs", response.data["detail"])
 
+    @patch("api.views.process_blog_generation_job.delay")
+    def test_process_job_enqueues_background_task(
+        self,
+        mock_delay,
+    ):
+        job = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+        )
+        response = self.client.post(
+            reverse("generation-job-process", kwargs={"pk": job.id}),
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        mock_delay.assert_called_once_with(job.id)
+
     @patch("api.services.job_processing.BlogGenerator")
     @patch("api.services.job_processing.YouTubeMetadataFetcher")
     @patch("api.services.job_processing.TranscriptionService")
     @patch("api.services.job_processing.YouTubeAudioDownloader")
-    def test_process_job_updates_status_to_completed(
+    def test_celery_task_processes_job_to_completion(
         self,
         mock_downloader,
         mock_transcription_service,
@@ -286,13 +307,10 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         with patch(
             "api.services.job_processing.os.path.exists", return_value=True
         ), patch("api.services.job_processing.os.remove"):
-            response = self.client.post(
-                reverse("generation-job-process", kwargs={"pk": job.id}),
-                format="json",
-            )
+            result = process_blog_generation_job(job.id)
 
         job.refresh_from_db()
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(result["status"], BlogGenerationJob.Status.COMPLETED)
         self.assertEqual(job.status, BlogGenerationJob.Status.COMPLETED)
         self.assertEqual(job.generated_content, "<h1>Blog</h1>")
 
