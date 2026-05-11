@@ -235,6 +235,32 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(response.data["id"], existing.id)
         self.assertEqual(BlogGenerationJob.objects.count(), 1)
 
+    def test_create_job_reuses_recent_completed_match(self):
+        existing = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+            status=BlogGenerationJob.Status.COMPLETED,
+            title="Existing title",
+            generated_content="<h1>Existing</h1>",
+        )
+
+        response = self.client.post(
+            reverse("generation-job-create"),
+            {
+                "link": "https://www.youtube.com/watch?v=abc123xyz99",
+                "tone": "professional",
+                "length": "medium",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["id"], existing.id)
+        self.assertEqual(BlogGenerationJob.objects.count(), 1)
+
     @patch("api.views.settings.MAX_ACTIVE_GENERATION_JOBS_PER_USER", 1)
     def test_create_job_enforces_active_job_limit(self):
         BlogGenerationJob.objects.create(

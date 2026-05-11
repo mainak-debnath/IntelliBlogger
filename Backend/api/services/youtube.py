@@ -15,6 +15,13 @@ class YouTubeUrl:
     """Normalizes YouTube URLs to https://www.youtube.com/watch?v=<id>."""
 
     @staticmethod
+    def video_id(link: str) -> str:
+        normalized = YouTubeUrl.normalize(link)
+        parsed = urlparse(normalized)
+        query = parse_qs(parsed.query)
+        return query.get("v", [""])[0]
+
+    @staticmethod
     def normalize(link: str) -> str:
         parsed = urlparse(link)
         host = parsed.netloc.lower()

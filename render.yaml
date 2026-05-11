@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: intelliblogger-api
+    env: python
+    rootDir: Backend
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
+    startCommand: gunicorn intelliblogger_backend.wsgi:application
+    healthCheckPath: /api/health/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: DEBUG
+        value: false
+      - key: LOG_LEVEL
+        value: INFO
+      - key: JOB_EXECUTION_MODE
+        value: sync

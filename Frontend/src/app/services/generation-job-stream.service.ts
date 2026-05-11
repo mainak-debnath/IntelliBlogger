@@ -1,5 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { BlogGenerationJob } from '../models/blog-generation-job';
 
 @Injectable({
@@ -7,6 +8,7 @@ import { BlogGenerationJob } from '../models/blog-generation-job';
 })
 export class GenerationJobStreamService {
   private eventSource?: EventSource;
+  private readonly streamBaseUrl = environment.backendBaseUrl.replace(/\/$/, '');
   private jobUpdatesSubject = new Subject<BlogGenerationJob>();
   readonly jobUpdates$: Observable<BlogGenerationJob> = this.jobUpdatesSubject.asObservable();
 
@@ -21,7 +23,7 @@ export class GenerationJobStreamService {
       return;
     }
 
-    const url = `http://localhost:8000/api/generation-jobs/stream/?token=${encodeURIComponent(token)}`;
+    const url = `${this.streamBaseUrl}/api/generation-jobs/stream/?token=${encodeURIComponent(token)}`;
     this.eventSource = new EventSource(url);
 
     this.eventSource.addEventListener('job_update', (event: MessageEvent) => {

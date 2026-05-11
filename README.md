@@ -1,112 +1,39 @@
-## 📝 IntelliBlogger: AI-Powered YouTube to Blog Converter
+# IntelliBlogger
 
-Transform YouTube videos into engaging, professional blog posts in seconds with AI-powered content generation.
+IntelliBlogger is an AI-powered content repurposing app that converts YouTube videos into editable blog posts. It is built as a full-stack project with Angular on the frontend and Django on the backend, with job-based generation flows designed to scale beyond a simple demo.
 
-## Demo
-### Homepage
-https://github.com/user-attachments/assets/8bb5edc6-bc26-493d-affb-169f0ce310ad
+## What This Project Shows
 
-### Login
-https://github.com/user-attachments/assets/6e053f0b-0cff-4e25-b5ac-8d195842ae29
+- JWT authentication and protected APIs
+- AI-driven blog generation with tone and length controls
+- Saved blog management and editing workflows
+- Redis-backed caching and real-time job updates with SSE
+- Job-based generation architecture with sync and Celery execution modes
+- Production-oriented backend configuration with environment-based settings
 
-### Signup
-https://github.com/user-attachments/assets/39562859-fa05-4552-836c-361bbf0229c2
+## Tech Stack
 
-### Blog generator
-https://github.com/user-attachments/assets/83418401-2266-4a95-a8df-0bf3e90a0a07
+- Frontend: Angular, TypeScript
+- Backend: Django, Django REST Framework
+- Database: SQLite locally, Postgres in hosted environments
+- Queue / cache: Redis
+- AI services: Gemini, AssemblyAI
 
-### Saved blogs page
-https://github.com/user-attachments/assets/d516a55d-2f6e-4407-96cf-49f76319138b
+## Local Development
 
-https://github.com/user-attachments/assets/6aab8a84-954d-410d-ad8a-6b8c7ed362ee
-
-### Blog details and editing
-https://github.com/user-attachments/assets/21126add-0873-4135-ad8c-1acf73dc8281
-
-### Mobile menu (responsive)
-https://github.com/user-attachments/assets/98553466-b42c-471b-80ee-f366885e35ac
-
-## 🎯 What is IntelliBlogger?
-
-IntelliBlogger converts any YouTube video into a well-written blog post using AI. Perfect for content creators, marketers, and educators who want to repurpose video content into written format.
-
-**Simply paste a YouTube link, choose your style, and get a publish-ready blog post.**
-
-## ✨ Features
-
-### 🎥 Smart Conversion
-
-- Paste any YouTube link and get a complete blog post
-- Choose your writing style: Professional, Casual, Witty, or Technical
-- Select content length: Short, Medium, or Long
-
-### ✍️ Edit & Customize
-
-- Built-in rich text editor to refine your content
-- Edit titles and content with ease
-- Real-time preview of your changes
-
-### 📚 Organize Your Content
-
-- Save blogs to your personal dashboard
-- Search and filter your saved posts
-- Access your content anytime
-
-### 📤 Export & Share
-
-- **Download:** PDF, Markdown, or HTML format
-- **Share:** Directly to LinkedIn, Twitter, or Email
-- **Copy:** One-click clipboard copy
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.8 or higher
-- Node.js 18 or higher
-- Redis (for caching)
-- FFmpeg (for audio processing)
-
-### Installation
-
-1.  **Clone the repository**
-
-```bash
-git clone https://github.com/mainak-debnath/IntelliBlogger.git
-cd IntelliBlogger
-```
-
-1.  **Setup Backend**
+### Backend
 
 ```bash
 cd Backend
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-1.  **Configure Environment** Create `.env` file in the Backend directory:
-
-```bash
-SECRET_KEY=your-secret-key
-GEMINI_API_KEY=your-gemini-api-key
-ASSEMBLY_API_KEY=your-assemblyai-api-key
-```
-
-1.  **Setup Database**
-
-```bash
+copy .env.example .env
 python manage.py migrate
-```
-
-1.  **Start Backend**
-
-```bash
-
 python manage.py runserver
 ```
 
-1.  **Setup Frontend** (new terminal)
+### Frontend
 
 ```bash
 cd Frontend
@@ -114,36 +41,40 @@ npm install
 npm start
 ```
 
-1.  **Access the app** at http://localhost:4200
+### Optional Celery Worker
 
-## 💡 How to Use
+For full async local development:
 
-1.  **Sign up** for a free account
-2.  **Paste** any YouTube video link
-3.  **Choose** your preferred tone and length
-4.  **Generate** your blog post
-5.  **Edit** content using the rich text editor
-6.  **Export** or share your finished blog
+```bash
+cd Backend
+venv\Scripts\activate
+python -m celery -A intelliblogger_backend worker --pool=solo --loglevel=info
+```
 
-## 🛠️ Tech Stack
+## Execution Modes
 
-- **Frontend:** Angular, TypeScript
-- **Backend:** Django, Python
-- **AI:** Google Gemini, AssemblyAI
-- **Database:** SQLite
+The backend supports two generation modes:
 
-- **⚠️ Current Limitations**
+- `JOB_EXECUTION_MODE=celery`
+  Uses Redis + Celery workers for background processing.
+- `JOB_EXECUTION_MODE=sync`
+  Processes generation inline in the web service. This is useful for cheaper or free hosting.
 
-  - Only English audio is supported at this time
-  - Videos must have clear audio (automated captions may not work well)
+## Deployment
 
-## 🗺️ Project Roadmap
+Deployment instructions are in [docs/deployment.md](/C:/Projects/Intelliblogger/docs/deployment.md).
 
-IntelliBlogger is continuously evolving. Here are some of our planned features and improvements:
+The recommended free-friendly setup is:
 
-- **Future Enhancements:**
+- Frontend: Vercel
+- Backend: Render web service
+- Database: Supabase Postgres
+- Redis: Upstash Redis
 
-  - Direct publishing integrations with popular CMS platforms (WordPress, Medium).
-  - Advanced content analytics and performance tracking.
-  - Mobile application for on-the-go content generation.
-  - Enhanced UI/UX for a more intuitive user experience.
+For public demo hosting, use:
+
+```env
+JOB_EXECUTION_MODE=sync
+```
+
+This keeps the job-based product flow without requiring a paid background worker.

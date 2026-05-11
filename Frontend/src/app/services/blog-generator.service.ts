@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, throwError } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { BlogGenerationJob } from '../models/blog-generation-job';
 import { BlogResponse } from '../models/blog-response';
 import { SaveBlogRequest } from '../models/save-blog-request';
@@ -11,7 +12,7 @@ import { SaveBlogResponse } from '../models/save-blog-response';
 })
 export class BlogGeneratorService {
 
-  private readonly baseUrl = 'http://localhost:8000/api';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient) { }
 

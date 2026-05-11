@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, Observable, of, tap } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { SignupPayload } from '../models/signup-model';
 import { TokenResponse } from '../models/token-response';
 
@@ -10,7 +11,7 @@ import { TokenResponse } from '../models/token-response';
 })
 export class AuthService {
 
-  private baseUrl = 'http://localhost:8000/api';
+  private readonly baseUrl = environment.apiBaseUrl;
 
   constructor(private http: HttpClient, private router: Router) { }
 

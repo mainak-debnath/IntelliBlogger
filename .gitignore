@@ -222,3 +222,5 @@ cython_debug/
 .history
 .ionide
 launch.json
+Backend/media/
+diag.json

@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 import { Blog } from '../models/blog';
 import { BlogExportData } from '../models/blog-export-data';
 import { BlogUpdateRequest } from '../models/blog-update-request';
@@ -9,7 +10,7 @@ import { BlogUpdateRequest } from '../models/blog-update-request';
   providedIn: 'root'
 })
 export class BlogService {
-  private readonly apiUrl = 'http://localhost:8000/api';
+  private readonly apiUrl = environment.apiBaseUrl;
   constructor(private http: HttpClient) { }
 
   getBlogs(q: string) {
