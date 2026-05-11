@@ -115,6 +115,28 @@ class BlogGenerationJobRepository:
             .first()
         )
 
+    def get_recent_completed_match(
+        self,
+        *,
+        user: User,
+        normalized_youtube_link: str,
+        tone: str,
+        length: str,
+    ) -> Optional[BlogGenerationJob]:
+        return (
+            BlogGenerationJob.objects.filter(
+                user=user,
+                normalized_youtube_link=normalized_youtube_link,
+                tone=tone,
+                length=length,
+                status=BlogGenerationJob.Status.COMPLETED,
+                generated_content__gt="",
+                title__gt="",
+            )
+            .order_by("-completed_at", "-created_at")
+            .first()
+        )
+
     def count_active_for_user(self, *, user: User) -> int:
         return BlogGenerationJob.objects.filter(
             user=user,

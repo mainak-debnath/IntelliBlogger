@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { QuillModule } from 'ngx-quill';
 import { Blog } from '../../models/blog';
@@ -56,7 +55,6 @@ export class BlogDetailsComponent implements OnInit {
     private blogService: BlogService,
     public themeService: ThemeService,
     private auth: AuthService,
-    private sanitizer: DomSanitizer,
     private toastService: ToastService
   ) { }
 
@@ -120,8 +118,8 @@ export class BlogDetailsComponent implements OnInit {
     }
   }
 
-  getSafeHtml(content: string): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(content);
+  getSafeHtml(content: string): string {
+    return content;
   }
 
   // Statistics methods

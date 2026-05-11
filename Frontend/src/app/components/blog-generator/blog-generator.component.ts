@@ -1,7 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Router, RouterModule } from '@angular/router';
 import { Subscription, finalize, switchMap, take, tap } from 'rxjs';
 import { BlogGenerationJob } from '../../models/blog-generation-job';
@@ -41,7 +40,6 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
     public themeService: ThemeService,
     private auth: AuthService,
     private router: Router,
-    private sanitizer: DomSanitizer,
     private toastService: ToastService,
     private generationJobStreamService: GenerationJobStreamService
   ) {
@@ -144,8 +142,8 @@ export class BlogGeneratorComponent implements OnInit, OnDestroy {
       });
   }
 
-  getSanitizedContent(): SafeHtml {
-    return this.sanitizer.bypassSecurityTrustHtml(this.blogResponse?.content || '');
+  getSanitizedContent(): string {
+    return this.blogResponse?.content || '';
   }
 
   startOver() {

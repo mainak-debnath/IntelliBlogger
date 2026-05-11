@@ -231,6 +231,16 @@ class BlogGenerationJobCreateAPIView(APIView):
             response_serializer = BlogGenerationJobSerializer(duplicate_job)
             return Response(response_serializer.data, status=status.HTTP_200_OK)
 
+        completed_job = repo.get_recent_completed_match(
+            user=request.user,
+            normalized_youtube_link=normalized_link,
+            tone=serializer.validated_data["tone"],
+            length=serializer.validated_data["length"],
+        )
+        if completed_job:
+            response_serializer = BlogGenerationJobSerializer(completed_job)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
+
         max_active_jobs = getattr(settings, "MAX_ACTIVE_GENERATION_JOBS_PER_USER", 3)
         active_jobs = repo.count_active_for_user(user=request.user)
         if active_jobs >= max_active_jobs:

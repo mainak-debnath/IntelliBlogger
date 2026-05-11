@@ -11,7 +11,12 @@ from api.models import BlogGenerationJob
 from .blog_generation import BlogGenerator
 from .job_notifications import BlogGenerationJobNotifier
 from .transcription import TranscriptionService
-from .youtube import AudioDownloadError, YouTubeAudioDownloader, YouTubeMetadataFetcher
+from .youtube import (
+    AudioDownloadError,
+    YouTubeAudioDownloader,
+    YouTubeMetadataFetcher,
+    YouTubeUrl,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +40,7 @@ class BlogGenerationJobProcessor:
         self.notifier.notify(job)
 
         parsed_link = job.normalized_youtube_link
-        video_id = parsed_link.split("v=")[-1]
+        video_id = YouTubeUrl.video_id(parsed_link)
         transcript_cache_key = f"youtube_transcript:{video_id}"
         blog_cache_key = (
             f"generated_blog:{job.user_id}:{video_id}:{job.tone}:{job.length}"
