@@ -1,3 +1,4 @@
+import tempfile
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -10,6 +11,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from api.models import BlogGenerationJob, BlogPost
 from api.tasks import process_blog_generation_job
+from api.services.youtube import RapidApiAudioDownloader, YouTubeAudioDownloader
 
 
 class BaseAuthenticatedAPITestCase(APITestCase):
@@ -326,6 +328,7 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         mock_process.assert_called_once()
+
     @patch("api.services.job_processing.BlogGenerator")
     @patch("api.services.job_processing.YouTubeMetadataFetcher")
     @patch("api.services.job_processing.TranscriptionService")
@@ -376,3 +379,102 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         mock_process.assert_called_once()
         processed_job = mock_process.call_args.args[0]
         self.assertEqual(processed_job.id, job.id)
+
+
+class AudioDownloadProviderTests(APITestCase):
+    @patch("api.services.youtube.requests.get")
+    def test_rapidapi_downloader_handles_plain_text_download_url(self, mock_get):
+        conversion_response = self._build_response(
+            text="https://cdn.example.com/audio.mp3",
+            headers={"content-type": "text/plain"},
+        )
+        download_response = self._build_response(
+            headers={"content-type": "audio/mpeg"},
+            chunks=[b"abc", b"123"],
+        )
+        mock_get.side_effect = [conversion_response, download_response]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            downloader = RapidApiAudioDownloader(
+                media_root=temp_dir,
+                api_key="test-key",
+                api_host="youtube-mp310.p.rapidapi.com",
+                base_url="https://youtube-mp310.p.rapidapi.com",
+                download_path="/download/mp3",
+                timeout_seconds=5,
+            )
+            output_path = downloader.download_mp3("https://youtu.be/abc123xyz99")
+
+        self.assertEqual(mock_get.call_count, 2)
+        self.assertTrue(output_path.endswith(".mp3"))
+
+    @patch("api.services.youtube.requests.get")
+    def test_rapidapi_downloader_handles_json_download_url(self, mock_get):
+        conversion_response = self._build_response(
+            json_payload={
+                "status": "success",
+                "result": [{"dlurl": "https://cdn.example.com/audio.mp3"}],
+            },
+            headers={"content-type": "application/json"},
+        )
+        download_response = self._build_response(
+            headers={"content-type": "audio/mpeg"},
+            chunks=[b"abc"],
+        )
+        mock_get.side_effect = [conversion_response, download_response]
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            downloader = RapidApiAudioDownloader(
+                media_root=temp_dir,
+                api_key="test-key",
+                api_host="youtube-mp310.p.rapidapi.com",
+                base_url="https://youtube-mp310.p.rapidapi.com",
+                download_path="/download/mp3",
+                timeout_seconds=5,
+            )
+            output_path = downloader.download_mp3("https://youtu.be/abc123xyz99")
+
+        self.assertEqual(mock_get.call_count, 2)
+        self.assertTrue(output_path.endswith(".mp3"))
+
+    @patch("api.services.youtube.RapidApiAudioDownloader")
+    @patch("api.services.youtube.LocalYtDlpAudioDownloader")
+    @patch("api.services.youtube.settings.AUDIO_DOWNLOAD_PROVIDER", "rapidapi")
+    def test_facade_selects_rapidapi_provider(
+        self, mock_local_downloader, mock_rapidapi_downloader
+    ):
+        provider = mock_rapidapi_downloader.return_value
+        provider.download_mp3.return_value = "rapid.mp3"
+
+        downloader = YouTubeAudioDownloader(media_root="test-media")
+        result = downloader.download_mp3("https://youtu.be/abc123xyz99")
+
+        mock_rapidapi_downloader.assert_called_once_with(media_root="test-media")
+        mock_local_downloader.assert_not_called()
+        self.assertEqual(result, "rapid.mp3")
+
+    @staticmethod
+    def _build_response(
+        *,
+        text: str = "",
+        headers: dict | None = None,
+        json_payload: dict | None = None,
+        chunks: list[bytes] | None = None,
+    ):
+        class FakeResponse:
+            def __init__(self):
+                self.text = text
+                self.headers = headers or {}
+
+            def raise_for_status(self):
+                return None
+
+            def json(self):
+                if json_payload is None:
+                    raise ValueError("No JSON payload")
+                return json_payload
+
+            def iter_content(self, chunk_size=8192):
+                return iter(chunks or [])
+
+        return FakeResponse()
