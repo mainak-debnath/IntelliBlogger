@@ -158,15 +158,9 @@ SIMPLE_JWT = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 FFMPEG_LOCATION = os.getenv("FFMPEG_LOCATION")
-AUDIO_DOWNLOAD_PROVIDER = os.getenv("AUDIO_DOWNLOAD_PROVIDER", "local").strip().lower()
-RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY", "")
-RAPIDAPI_HOST = os.getenv("RAPIDAPI_HOST", "youtube-mp310.p.rapidapi.com")
-RAPIDAPI_BASE_URL = os.getenv(
-    "RAPIDAPI_BASE_URL",
-    f"https://{RAPIDAPI_HOST}" if RAPIDAPI_HOST else "",
-)
-RAPIDAPI_DOWNLOAD_PATH = os.getenv("RAPIDAPI_DOWNLOAD_PATH", "/download/mp3")
-RAPIDAPI_TIMEOUT_SECONDS = int(os.getenv("RAPIDAPI_TIMEOUT_SECONDS", "60"))
+TRANSCRIPTION_PROVIDER = os.getenv(
+    "TRANSCRIPTION_PROVIDER", "assemblyai"
+).strip().lower()
 MAX_ACTIVE_GENERATION_JOBS_PER_USER = int(
     os.getenv("MAX_ACTIVE_GENERATION_JOBS_PER_USER", "3")
 )

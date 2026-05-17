@@ -85,7 +85,7 @@ class BlogGenerationJobRepository:
         return BlogGenerationJob.objects.get(id=pk, user=user)
 
     def list_for_user(self, *, user: User) -> QuerySet[BlogGenerationJob]:
-        return BlogGenerationJob.objects.filter(user=user).order_by("-created_at")
+        return BlogGenerationJob.objects.filter(user=user).order_by("-created_at", "-id")
 
     def list_queued(self, limit: int = 10) -> QuerySet[BlogGenerationJob]:
         return BlogGenerationJob.objects.filter(status=BlogGenerationJob.Status.QUEUED)[

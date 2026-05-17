@@ -67,6 +67,9 @@ class GenerateBlogTests(BaseAuthenticatedAPITestCase):
         mock_transcription_service.return_value.transcribe_file.return_value = (
             "sample transcript"
         )
+        mock_transcription_service.return_value.uses_direct_youtube_transcripts.return_value = (
+            False
+        )
         mock_metadata_fetcher.return_value.get_title.return_value.title = "Demo title"
         mock_blog_generator.return_value.from_transcript.return_value = "<h1>Blog</h1>"
 
@@ -101,6 +104,41 @@ class GenerateBlogTests(BaseAuthenticatedAPITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("tone", response.data)
+
+    @patch("api.views.settings.TRANSCRIPTION_PROVIDER", "youtube_transcript_api")
+    @patch("api.views.BlogGenerator")
+    @patch("api.views.YouTubeMetadataFetcher")
+    @patch("api.views.TranscriptionService")
+    @patch("api.views.YouTubeAudioDownloader")
+    def test_generate_blog_uses_youtube_transcript_provider_without_audio_download(
+        self,
+        mock_downloader,
+        mock_transcription_service,
+        mock_metadata_fetcher,
+        mock_blog_generator,
+    ):
+        mock_transcription_service.return_value.uses_direct_youtube_transcripts.return_value = (
+            True
+        )
+        mock_transcription_service.return_value.transcribe_youtube.return_value = (
+            "sample transcript"
+        )
+        mock_metadata_fetcher.return_value.get_title.return_value.title = "Demo title"
+        mock_blog_generator.return_value.from_transcript.return_value = "<h1>Blog</h1>"
+
+        response = self.client.post(
+            reverse("generate_blog"),
+            {
+                "link": "https://youtu.be/abc123xyz99",
+                "tone": "professional",
+                "length": "medium",
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        mock_downloader.return_value.download_mp3.assert_not_called()
+        mock_transcription_service.return_value.transcribe_youtube.assert_called_once()
 
 
 class SaveBlogTests(BaseAuthenticatedAPITestCase):
@@ -287,6 +325,7 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
         self.assertIn("active generation jobs", response.data["detail"])
 
+    @patch("api.views.settings.JOB_EXECUTION_MODE", "celery")
     @patch("api.views.process_blog_generation_job.delay")
     def test_process_job_enqueues_background_task(
         self,
@@ -351,6 +390,9 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         mock_transcription_service.return_value.transcribe_file.return_value = (
             "sample transcript"
         )
+        mock_transcription_service.return_value.uses_direct_youtube_transcripts.return_value = (
+            False
+        )
         mock_metadata_fetcher.return_value.get_title.return_value.title = "Demo title"
         mock_blog_generator.return_value.from_transcript.return_value = "<h1>Blog</h1>"
 
@@ -363,6 +405,41 @@ class BlogGenerationJobTests(BaseAuthenticatedAPITestCase):
         self.assertEqual(result["status"], BlogGenerationJob.Status.COMPLETED)
         self.assertEqual(job.status, BlogGenerationJob.Status.COMPLETED)
         self.assertEqual(job.generated_content, "<h1>Blog</h1>")
+
+    @patch("api.services.job_processing.BlogGenerator")
+    @patch("api.services.job_processing.YouTubeMetadataFetcher")
+    @patch("api.services.job_processing.TranscriptionService")
+    @patch("api.services.job_processing.YouTubeAudioDownloader")
+    def test_job_processor_uses_youtube_transcript_provider_without_audio_download(
+        self,
+        mock_downloader,
+        mock_transcription_service,
+        mock_metadata_fetcher,
+        mock_blog_generator,
+    ):
+        job = BlogGenerationJob.objects.create(
+            user=self.user,
+            youtube_link="https://youtu.be/abc123xyz99",
+            normalized_youtube_link="https://www.youtube.com/watch?v=abc123xyz99",
+            tone="professional",
+            length="medium",
+        )
+        mock_transcription_service.return_value.uses_direct_youtube_transcripts.return_value = (
+            True
+        )
+        mock_transcription_service.return_value.transcribe_youtube.return_value = (
+            "sample transcript"
+        )
+        mock_metadata_fetcher.return_value.get_title.return_value.title = "Demo title"
+        mock_blog_generator.return_value.from_transcript.return_value = "<h1>Blog</h1>"
+
+        result = process_blog_generation_job(job.id)
+
+        job.refresh_from_db()
+        self.assertEqual(result["status"], BlogGenerationJob.Status.COMPLETED)
+        self.assertEqual(job.status, BlogGenerationJob.Status.COMPLETED)
+        mock_downloader.return_value.download_mp3.assert_not_called()
+        mock_transcription_service.return_value.transcribe_youtube.assert_called_once()
 
     @patch("api.services.job_processing.BlogGenerationJobProcessor.process")
     def test_management_command_processes_queued_jobs(self, mock_process):
