@@ -158,6 +158,9 @@ SIMPLE_JWT = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 FFMPEG_LOCATION = os.getenv("FFMPEG_LOCATION")
+TRANSCRIPTION_PROVIDER = os.getenv(
+    "TRANSCRIPTION_PROVIDER", "assemblyai"
+).strip().lower()
 MAX_ACTIVE_GENERATION_JOBS_PER_USER = int(
     os.getenv("MAX_ACTIVE_GENERATION_JOBS_PER_USER", "3")
 )

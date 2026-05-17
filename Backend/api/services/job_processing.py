@@ -67,8 +67,12 @@ class BlogGenerationJobProcessor:
 
             transcription = cache.get(transcript_cache_key)
             if not transcription:
-                audio_path = YouTubeAudioDownloader().download_mp3(parsed_link)
-                transcription = TranscriptionService().transcribe_file(audio_path)
+                transcription_service = TranscriptionService()
+                if transcription_service.uses_direct_youtube_transcripts():
+                    transcription = transcription_service.transcribe_youtube(parsed_link)
+                else:
+                    audio_path = YouTubeAudioDownloader().download_mp3(parsed_link)
+                    transcription = transcription_service.transcribe_file(audio_path)
                 cache.set(transcript_cache_key, transcription, timeout=60 * 60 * 24)
 
             title = YouTubeMetadataFetcher().get_title(parsed_link).title

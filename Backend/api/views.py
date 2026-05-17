@@ -171,9 +171,15 @@ class GenerateBlogView(APIView):
 
         try:
             audio_path = None
+            transcription_service = TranscriptionService()
             if not transcription:
-                audio_path = YouTubeAudioDownloader().download_mp3(normalized_link)
-                transcription = TranscriptionService().transcribe_file(audio_path)
+                if transcription_service.uses_direct_youtube_transcripts():
+                    transcription = transcription_service.transcribe_youtube(
+                        normalized_link
+                    )
+                else:
+                    audio_path = YouTubeAudioDownloader().download_mp3(normalized_link)
+                    transcription = transcription_service.transcribe_file(audio_path)
                 cache.set(transcript_cache_key, transcription, timeout=60 * 60 * 24)
 
             title = YouTubeMetadataFetcher().get_title(normalized_link).title
