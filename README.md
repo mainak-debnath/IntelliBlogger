@@ -2,6 +2,30 @@
 
 IntelliBlogger is an AI-powered content repurposing app that converts YouTube videos into editable blog posts. It is built as a full-stack project with Angular on the frontend and Django on the backend, with job-based generation flows designed to scale beyond a simple demo.
 
+## Demo
+### Homepage
+https://github.com/user-attachments/assets/8bb5edc6-bc26-493d-affb-169f0ce310ad
+
+### Login
+https://github.com/user-attachments/assets/6e053f0b-0cff-4e25-b5ac-8d195842ae29
+
+### Signup
+https://github.com/user-attachments/assets/39562859-fa05-4552-836c-361bbf0229c2
+
+### Blog generator
+https://github.com/user-attachments/assets/83418401-2266-4a95-a8df-0bf3e90a0a07
+
+### Saved blogs page
+https://github.com/user-attachments/assets/d516a55d-2f6e-4407-96cf-49f76319138b
+
+https://github.com/user-attachments/assets/6aab8a84-954d-410d-ad8a-6b8c7ed362ee
+
+### Blog details and editing
+https://github.com/user-attachments/assets/21126add-0873-4135-ad8c-1acf73dc8281
+
+### Mobile menu (responsive)
+https://github.com/user-attachments/assets/98553466-b42c-471b-80ee-f366885e35ac
+
 ## What This Project Shows
 
 - JWT authentication and protected APIs
